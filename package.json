@@ -1,0 +1,24 @@
+{
+  "name": "lowdb-test",
+  "version": "1.0.0",
+  "description": "",
+  "source": "src/index.html",
+  "browserslist": "> 0.5%, last 2 versions, not dead",
+  "main": "index.js",
+  "scripts": {
+    "start": "parcel",
+    "build": "parcel build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/uuid": "^8.3.4",
+    "parcel": "^2.6.2"
+  },
+  "dependencies": {
+    "lowdb": "^3.0.0",
+    "uuid": "^8.3.2"
+  }
+}
