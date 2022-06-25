@@ -1,16 +1,17 @@
 import { v4 as uuidv4 } from "uuid";
+import { createEdition } from "./edition";
 
 // I'm not using styles yet... but it's imported here in any case!
 import "./styles.css";
 
 // Type for the team object
-type Team = {
+export type Team = {
   id: string;
   name: string;
 };
 
 // Type for the whole database
-type DB = {
+export type DB = {
   teams: Team[];
 };
 
@@ -20,7 +21,7 @@ const dbName = 'db'
 const db = () => JSON.parse(localStorage.getItem(dbName) || '{"teams":[]}');
 
 // Save to the db using the appropriate methods
-function saveToDB(content: DB) {
+export function saveToDB(content: DB) {
   return localStorage.setItem(dbName, JSON.stringify(content))
 }
 
@@ -40,16 +41,22 @@ function listTeams() {
         const button = document.createElement('button');
 
         listItem.innerHTML = team.name + " "
-        button.innerText = "Remove"
+        button.innerText = "X"
         if (button) button.onclick = () => removeTeam(team.id)
 
         listItem.appendChild(button)
         if (teamsList) teamsList.appendChild(listItem)
       });
+    if (db().teams.length > 5) {
+        const createChamps = document.createElement('button')
+        createChamps.innerHTML = "create champs edition"
+        if (createChamps) createChamps.onclick = () => createEdition()
+        if (teamsList) teamsList.append(createChamps)
+    }
   }
 
-  // Append the empty message if there's no content
-  if (teamsList && db().teams.length === 0) {
+    // Append the empty message if there's no content
+    if (teamsList && db().teams.length === 0) {
     const emptyMessageContainer = document.createElement('p')
     emptyMessageContainer.innerText = `There are currently no teams registered!`;
     teamsList.appendChild(emptyMessageContainer);
@@ -106,3 +113,23 @@ if (addTeamName && button) button.addEventListener("click", () => addNewTeam(add
 
 // Initialize teams view
 listTeams();
+
+export function shuffleTeams() {
+
+  let editionList : any[] = [];
+
+  db().teams.forEach((team) => editionList.push(team.name))
+
+  function shuffle(array) {
+      for (let i = array.length -1; i > 0; i--) {
+          const j = Math.floor(Math.random()*(i+1));
+          [array[i], array[j]] = [array[j], array[i]]
+      }
+      return array;
+  };
+
+  shuffle(editionList)
+
+  return editionList
+}
+
