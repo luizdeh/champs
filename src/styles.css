@@ -1,4 +1,65 @@
-h1 {
-  color: hotpink;
-  font-family: cursive;
+body {
+    font-family:sans-serif;
+    color: black;
+    background-color: lightgrey;
+}
+
+.roundcontainer {
+    display:block;
+    justify-content: stretch;
+    align-items: center;
+    width: 50%;
+    margin-bottom: 5px;
+}
+
+.roundcount {
+    display:flex;
+    width: 50%;
+    justify-content:center;
+    font-size:12px;
+    font-weight:bold;
+}
+
+.container {
+    display:flex;
+    align-items: center;
+}
+
+.gcontainer {
+    display:flex;
+    align-items:center;
+    width:96%;
+    background-color:white;
+    margin: 5px;
+}
+
+.home {
+    flex:1;
+    justify-content:left;
+    text-align:left;
+    margin-left: 10px;
+}
+
+.away {
+    flex:1;
+    justify-content:right;
+    text-align:right;
+    margin-right: 10px;
+}
+
+.homescore {
+    width: 25px;
+    margin: 5px;
+
+}
+.awayscore {
+    width: 25px;
+    margin: 5px;
+}
+
+.gamecount {
+    flex:1;
+    justify-content:center;
+    font-size:8px;
+    font-weight:bold;
 }

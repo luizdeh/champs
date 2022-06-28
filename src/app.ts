@@ -18,7 +18,7 @@ export type DB = {
 const dbName = 'db'
 
 // Initialize db and read the db's contents
-const db = () => JSON.parse(localStorage.getItem(dbName) || '{"teams":[]}');
+export const db = () => JSON.parse(localStorage.getItem(dbName) || '{"teams":[], "edition": [], "games": []}');
 
 // Save to the db using the appropriate methods
 export function saveToDB(content: DB) {
@@ -34,13 +34,14 @@ function listTeams() {
 
   // Check if there's any content otherwise just show an empty warning!
   if (db().teams.length > 0) {
+    let teamNumber = 1
     // Loop through the teams array and populate the list in the DOM
     db().teams
       .forEach((team: Team) => {
         const listItem = document.createElement('li');
         const button = document.createElement('button');
 
-        listItem.innerHTML = team.name + " "
+        listItem.innerHTML = teamNumber++ +" : "+ team.name + " "
         button.innerText = "X"
         if (button) button.onclick = () => removeTeam(team.id)
 
@@ -87,7 +88,7 @@ function addNewTeam(name: string) {
   listTeams();
 }
 
-// Remove a team from the db
+// Remove a teamfrom the db
 function removeTeam(id: string) {
   // Find the team that you want to remove and create a new array
   const result = db().teams.filter((item: Team) => item.id !== id)
