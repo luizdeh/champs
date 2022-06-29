@@ -18,7 +18,7 @@ export type DB = {
 const dbName = 'db'
 
 // Initialize db and read the db's contents
-export const db = () => JSON.parse(localStorage.getItem(dbName) || '{"teams":[], "edition": [], "games": []}');
+export const db = () => JSON.parse(localStorage.getItem(dbName) || '{"teams":[], "games":[], "results":[]}');
 
 // Save to the db using the appropriate methods
 export function saveToDB(content: DB) {
@@ -117,9 +117,9 @@ listTeams();
 
 export function shuffleTeams() {
 
-  let editionList : any[] = [];
+  let editionList : [string,string][] = [];
 
-  db().teams.forEach((team) => editionList.push(team.name))
+  db().teams.forEach((team) => editionList.push([team.name, team.id]))
 
   function shuffle(array) {
       for (let i = array.length -1; i > 0; i--) {
