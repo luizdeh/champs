@@ -115,22 +115,15 @@ if (addTeamName && button) button.addEventListener("click", () => addNewTeam(add
 // Initialize teams view
 listTeams();
 
+type EditionList = {name: string, id: string}[]
+
 export function shuffleTeams() {
 
-  let editionList : [string,string][] = [];
+  let editionList: EditionList = [];
 
-  db().teams.forEach((team) => editionList.push([team.name, team.id]))
+  db().teams.forEach((team: Team) => editionList.push({name: team.name, id: team.id}))
 
-  function shuffle(array) {
-      for (let i = array.length -1; i > 0; i--) {
-          const j = Math.floor(Math.random()*(i+1));
-          [array[i], array[j]] = [array[j], array[i]]
-      }
-      return array;
-  };
-
-  shuffle(editionList)
+  editionList.sort(() => Math.random() - 0.5)
 
   return editionList
 }
-

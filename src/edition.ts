@@ -1,8 +1,33 @@
 import { shuffleTeams, db, saveToDB } from "./app";
 import { v4 as uuidv4 } from "uuid";
 
-export function createEdition() {
+export type Game = {home: {id: string, name: string}, away: {id: string, name: string}};
 
+// This method is just to prevent the default of the <Form /> that we are using in the HTML
+function formSubmit(event: SubmitEvent) {
+    event.preventDefault();
+}
+
+function addGame(gameId: string) {
+    const gameContainer = document.getElementById(gameId)
+    const homeGoal = gameContainer?.getElementsByClassName("homescore")[0] as HTMLInputElement
+    const awayGoal = gameContainer?.getElementsByClassName("awayscore")[0] as HTMLInputElement
+    const scoreBtn = gameContainer?.getElementsByClassName("scoreBtn")[0] as HTMLButtonElement
+
+    // Depois de salvar o resultado do jogo, desabilitar o botão de salvar
+    scoreBtn.disabled = true;
+
+    if (homeGoal.value && awayGoal.value) {
+        const newDB = db(); // copia do db
+        const currentGame = newDB.games.findIndex((game) => game.id === gameId); // achei o index do jogo que eu quero alterar
+
+        newDB.games[currentGame].result = {home: homeGoal.value, away: awayGoal.value}; // coloco o resultado no jogo
+
+        saveToDB(newDB)
+    }
+}
+
+export function createEdition() {
     // function that generates the games table => MAKE IT ASK FOR 'TURNO' AND 'RETURNO', fix function to accomodate single or double round robin
     function genGamesTable(players: any[]) {
         if (players.length % 2 == 1) {
@@ -33,7 +58,7 @@ export function createEdition() {
                 });
             }
             // rotating the array
-            playerIndexes.push(playerIndexes.shift());
+            playerIndexes.push(playerIndexes.shift()!);
             tournamentPairings.push(roundPairings);
         }
         return tournamentPairings;
@@ -49,7 +74,7 @@ export function createEdition() {
     const Table = document.getElementById("Teams") as HTMLElement;
 
     // 'global' acting as a counter for the games
-    let gc = 0;
+    let gc = 1;
 
     // set a single id for each champs
     const id = uuidv4();
@@ -67,8 +92,10 @@ export function createEdition() {
 
         Table.append(roundCount);
 
-        round.forEach((game: Array<any>) => {
+        round.forEach((game: Game) => {
             if (game.home && game.away) {
+                let gameId = uuidv4();
+
                 let container = document.createElement("div");
                 let gcontainer = document.createElement("div");
                 let home = document.createElement("span");
@@ -79,6 +106,8 @@ export function createEdition() {
                 let x = document.createElement("span");
                 let gamecount = document.createElement("span");
                 let scoreBtn = document.createElement('button');
+
+                container.id = gameId;
 
                 container.classList.add("container");
                 gcontainer.classList.add("gcontainer");
@@ -91,78 +120,54 @@ export function createEdition() {
                 scoreBtn.classList.add("scoreBtn");
                 scores.classList.add("scores")
 
-                home.innerHTML = game.home[0];
-                away.innerHTML = game.away[0];
+                home.innerHTML = game.home.name;
+                away.innerHTML = game.away.name;
                 x.innerHTML = " x ";
-                gamecount.innerHTML = gc++;
+                gamecount.innerHTML = `${gc}`; // print current value of gc
+                gc++ // add 1 to gc
                 scoreBtn.innerHTML = "save"
 
+                // Add event listener to button only if it and the input form both exists
+                if (scores) scores.onsubmit = formSubmit;
+                if (scoreBtn) scoreBtn.addEventListener("click", () => addGame(gameId));
+
+                scores.appendChild(home);
+                scores.appendChild(homescore);
+                scores.appendChild(x);
+                scores.appendChild(awayscore);
+                scores.appendChild(away);
+                scores.appendChild(scoreBtn)
                 container.appendChild(gamecount);
-                gcontainer.appendChild(home);
-                gcontainer.appendChild(homescore);
-                gcontainer.appendChild(x);
-                gcontainer.appendChild(awayscore);
-                gcontainer.appendChild(away);
+                gcontainer.appendChild(scores);
                 container.appendChild(gcontainer);
-                container.appendChild(scoreBtn)
                 roundContainer.appendChild(container);
 
-                let gameId = uuidv4();
                 let newDB = db();
+                let homeId = game.home.id
+                let awayId = game.away.id
 
-                // let homeTeam = game.home[0]
-                let homeId = game.home[1]
-                // let awayTeam = game.away[0]
-                let awayId = game.away[1]
-
-                newDB.games.push({
-                     editionId: editionId,
-                     gameId: gameId,
-                     round: rc,
-                     game: gc,
-                     // home: game.home,
-                     home: homeId,
-                     // away: away.home,
-                     away: awayId
-                 });
-                 saveToDB(newDB);
+                if (newDB.games) {
+                    newDB.games.push({
+                        id: gameId,
+                        edition: {
+                            id: editionId,
+                            round: rc,
+                            game: gc,
+                        },
+                        teams: {
+                            home: homeId,
+                            away: awayId
+                        },
+                        result: {
+                            home: null,
+                            away: null
+                        }
+                    });
+                    saveToDB(newDB);
+                }
             }
         });
         Table.appendChild(roundContainer);
     });
-
-    // This method is just to prevent the default of the <Form /> that we are using in the HTML
-    function formSubmit(event: SubmitEvent) {
-        event.preventDefault();
-    }
-
-    // Add onsubmit to the form element
-    let homeScore = document.getElementById('homescore')
-    let awayScore = document.getElementById('awayscore')
-    if (homeScore) homeScore.onsubmit = formSubmit;
-    if (awayScore) awayScore.onsubmit = formSubmit;
-
-    // Get button
-    const scoreBtn = document.getElementById("scoreBtn");
-
-    // Add event listener to button only if it and the input form both exists
-    if (scoreBtn) scoreBtn.addEventListener("click", () => addGame())
-
-    function addGame() {
-
-        if (homeScore && awayScore) {
-        const newDB = db()
-
-        let homeGoal = homeScore.nodeValue
-        let awayGoal = awayScore.nodeValue
-
-        let bunda = newDB.results.push({game: gameId, home: homeId, homeScore: homeGoal, away: awayId, awayScore: awayGoal})
-
-        return bunda
-        console.log('works?')
-        }
-        return console.log('?')
-        // saveToDB(newDB)
-    }
 }
 

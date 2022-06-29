@@ -8,16 +8,17 @@ body {
     display:block;
     justify-content: stretch;
     align-items: center;
-    width: 50%;
+    width: 100%;
     margin-bottom: 5px;
 }
 
 .roundcount {
     display:flex;
-    width: 50%;
+    width: 100%;
     justify-content:center;
     font-size:12px;
     font-weight:bold;
+    margin-left: -19px;
 }
 
 .container {
@@ -28,7 +29,7 @@ body {
 .gcontainer {
     display:flex;
     align-items:center;
-    width:96%;
+    width:100%;
     background-color:white;
     margin: 5px;
 }
