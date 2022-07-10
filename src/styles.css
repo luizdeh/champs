@@ -1,10 +1,114 @@
 body {
-    font-family:sans-serif;
-    color: black;
-    background-color: lightgrey;
+    background-color: white;
+    font-family: JetBrains Mono;
 }
 
-.roundcontainer {
+.champs {
+    display:flex;
+    width:100%;
+}
+
+.toggleTeamsButton {
+    flex:1;
+    margin: 15px;
+    color: darkgrey;
+    font-size: 16px;
+    font-weight:bold;
+}
+
+.toggleTeamsButton:hover {
+    color: white;
+    background-color: darkgrey;
+}
+
+.togglePlayerButton {
+    flex:1;
+    margin: 15px;
+    color: darkgrey;
+    font-size: 16px;
+    font-weight:bold;
+}
+
+.togglePlayerButton:hover {
+    color: white;
+    background-color:darkgrey;
+}
+
+.toggleTeams {
+    flex:1;
+    width:50%;
+    margin:10px;
+    color: black;
+    font-size: 12px;
+}
+
+.togglePlayers {
+    flex:1;
+    margin: 10px;
+    color: black;
+    font-size: 12px;
+}
+
+.teamSubmit {
+    height: 27px;
+    border: 0px solid;
+    color:white;
+    background-color:darkgrey;
+}
+
+.teamSubmit:hover {
+    color: lighgrey;
+    background-color:grey;
+}
+
+.teamInput {
+    height:25px;
+    border: 0px solid;
+    color: darkgrey;
+    background-color:lightgrey;
+    margin-bottom:10px;
+}
+
+.playerSubmit {
+    height: 27px;
+    border: 0px solid;
+    color:white;
+    background-color:darkgrey;
+}
+
+.playerSubmit:hover {
+    color: lighgrey;
+    background-color:grey;
+
+}
+
+.playerInput {
+    height:25px;
+    border: 0px solid;
+    color: darkgrey;
+    background-color:lightgrey;
+    margin-bottom:10px;
+}
+
+.teamsList {
+    display:flex;
+   margin-bottom: 10px;
+}
+
+.playersList {
+    margin-bottom: 10px;
+}
+.newEdition {
+    display:block;
+}
+
+.listTeam {
+    flex:1;
+}
+.listTeamButton {
+    flex:1;
+}
+.roundContainer {
     display:block;
     justify-content: stretch;
     align-items: center;
@@ -12,55 +116,93 @@ body {
     margin-bottom: 5px;
 }
 
-.roundcount {
+.roundCounter {
     display:flex;
-    width: 100%;
-    justify-content:center;
+    width:52%;
+    justify-content:right;
     font-size:12px;
     font-weight:bold;
-    margin-left: -19px;
+    /* margin-left: -100px; */
 }
 
 .container {
     display:flex;
-    align-items: center;
+    align-items:center;
 }
 
-.gcontainer {
+.gameCounter {
+    flex:1;
+    font-size:8px;
+    font-weight:bold;
+    /* width:5%; */
+}
+
+.gameContainer {
     display:flex;
     align-items:center;
-    width:100%;
+    width:96%;
     background-color:white;
-    margin: 5px;
+    border: 1px solid green;
+    margin:5px;
 }
 
-.home {
-    flex:1;
+.scores {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    width:100%;
+}
+
+.homeTeam {
+    flex:2;
     justify-content:left;
     text-align:left;
     margin-left: 10px;
 }
 
-.away {
-    flex:1;
+.awayTeam {
+    flex:2;
     justify-content:right;
     text-align:right;
     margin-right: 10px;
 }
 
-.homescore {
-    width: 25px;
-    margin: 5px;
-
-}
-.awayscore {
-    width: 25px;
-    margin: 5px;
-}
-
-.gamecount {
-    flex:1;
+.homeGoals {
+    flex:0;
+    align-items:center;
     justify-content:center;
-    font-size:8px;
+    width: 25px;
+    margin: 5px;
+
+}
+.awayGoals {
+    flex:0;
+    align-items:center;
+    justify-content:center;
+    width: 25px;
+    margin: 5px;
+}
+
+.scoreButton {
+    flex:0;
+    margin-right: 10px;
+}
+
+.title {
+    display:flex;
+    font-size:18px;
     font-weight:bold;
+    color: #474747;
+    align-items:center;
+    justify-content:space-evenly;
+
+}
+
+.champsName {
+    flex:1;
+    text-align:center;
+}
+.champsDate {
+    flex:1;
+    text-align:center;
 }
