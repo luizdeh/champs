@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
-import { Team, dbTeams, saveTeam, formSubmit } from "./app";
-import { generateTeamsList } from "./editions";
+import { dbGames, Team, dbTeams, saveTeam, formSubmit } from "./app";
+import { generateTeamsList, enableNewEditionButton } from "./editions";
 
 const champs = document.getElementById("champs");
 
@@ -14,7 +14,7 @@ toggleTeamsButton.style.cursor = "pointer";
 toggleTeamsButton.innerHTML = `${"TEAMS"}`;
 toggleTeamsButton.addEventListener("click", () => toggleHideTeams());
 
-champs.appendChild(toggleTeams);
+// champs.appendChild(toggleTeams);
 
 function toggleHideTeams() {
     if (toggleTeams.style.display === "none") {
@@ -72,35 +72,35 @@ function listTeams() {
 
         // Loop through the teams array and populate the list in the DOM
         dbTeams().forEach((team: Team) => {
-            const teamContainer = document.createElement('div')
+            const teamContainer = document.createElement("div");
             const listTeam = document.createElement("li");
             const listTeamRemove = document.createElement("button");
-            const listTeamAdd = document.createElement('button')
+            const listTeamAdd = document.createElement("button");
 
-            teamContainer.classList.add('teamContainer')
-            listTeam.classList.add('listTeam')
-            listTeamRemove.classList.add('listTeamRemove')
-            listTeamAdd.classList.add('listTeamAdd')
+            teamContainer.classList.add("teamContainer");
+            listTeam.classList.add("listTeam");
+            listTeamRemove.classList.add("listTeamRemove");
+            listTeamAdd.classList.add("listTeamAdd");
 
-            teamContainer.id = team.id
-            listTeam.id = team.id
-            listTeamRemove.id = team.id
-            listTeamAdd.id = team.id
+            teamContainer.id = team.id;
+            listTeam.id = team.id;
+            listTeamRemove.id = team.id;
+            listTeamAdd.id = team.id;
 
             listTeam.innerHTML = teamNumber++ + " : " + team.name + "   ";
-            listTeamRemove.innerText = `remove`;
-            listTeamAdd.innerText = `mark for new edition`
+            listTeamRemove.innerText = `[ remove ]`;
+            listTeamAdd.innerText = `[ add to next edition ]`;
             if (listTeamRemove) listTeamRemove.onclick = () => removeTeam(team.id);
-            if (listTeamAdd) listTeamAdd.onclick = () => generateTeamsList(team.id)
+            if (listTeamAdd) listTeamAdd.onclick = () => generateTeamsList(team.id, team.name);
 
-            if (teamsList)
-                teamsList.appendChild(teamContainer)
-                teamContainer.appendChild(listTeam)
-                teamContainer.appendChild(listTeamRemove)
-                teamContainer.appendChild(listTeamAdd)
+            if (teamsList) teamsList.appendChild(teamContainer);
+            teamContainer.appendChild(listTeam);
+            teamContainer.appendChild(listTeamRemove);
+            teamContainer.appendChild(listTeamAdd);
         });
-    findDuplicateTeams()
+        findDuplicateTeams();
     }
+    enableNewEditionButton();
 }
 
 function findDuplicateTeams() {
@@ -112,11 +112,16 @@ function findDuplicateTeams() {
         if (unique.size < newDB.length) {
             let duplicates = newDB
                 .map((item: string) => item["name"])
-                .map((item: string, index: number, final: string) => final.indexOf(item) !== index && index)
+                .map(
+                    (item: string, index: number, final: string) =>
+                        final.indexOf(item) !== index && index
+                )
                 .filter((obj: string) => newDB[obj])
                 .map((item: string) => newDB[item]["id"]);
 
-            let uniques = newDB.filter((obj: Team) => !duplicates.includes(obj.id));
+            let uniques = newDB.filter(
+                (obj: Team) => !duplicates.includes(obj.id)
+            );
 
             saveTeam(uniques);
 
@@ -142,8 +147,27 @@ function addTeam(name: string) {
 }
 // remove team
 function removeTeam(id: string) {
-    const result = dbTeams().filter((item: Team) => item.id !== id);
-    saveTeam(result);
+    const games = dbGames();
+    let played = [];
+    // const uniques = [...new Set(what)]
+    for (let i = 0; i < games.length; i++) {
+        let home = games[i].teams.home.id;
+        let away = games[i].teams.away.id;
+        played.push(home, away);
+    }
+    let what = played.map((item: string) => item === id);
+    let uniqueHome = [...new Set(what)];
+    if (uniqueHome.length === 1) {
+        const result = dbTeams().filter((item: string) => item.id !== id);
+        saveTeam(result);
+        listTeams();
+    }
+    const teamContainer = document.getElementById(id);
+    const listTeamRemoved = teamContainer?.getElementsByClassName(
+        "listTeamRemove"
+    )[0] as HTMLButtonElement;
+    listTeamRemoved.disabled = true;
+    alert("Team has participated in a champs, cannot remove");
     listTeams();
 }
 

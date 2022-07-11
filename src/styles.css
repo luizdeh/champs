@@ -5,11 +5,12 @@ body {
 
 .champs {
     display:flex;
-    width:100%;
+    flex-direction: row;
+    justify-content:space-evenly;
 }
 
 .toggleTeamsButton {
-    flex:1;
+    flex:0;
     margin: 15px;
     color: darkgrey;
     font-size: 16px;
@@ -22,7 +23,7 @@ body {
 }
 
 .togglePlayerButton {
-    flex:1;
+    flex:0;
     margin: 15px;
     color: darkgrey;
     font-size: 16px;
@@ -36,7 +37,6 @@ body {
 
 .toggleTeams {
     flex:1;
-    width:50%;
     margin:10px;
     color: black;
     font-size: 12px;
@@ -92,7 +92,7 @@ body {
 
 .teamsList {
     display:flex;
-   margin-bottom: 10px;
+    margin-bottom: 10px;
 }
 
 .playersList {
@@ -104,9 +104,38 @@ body {
 
 .listTeam {
     flex:1;
+    margin:10px;
+    font-size:14px;
 }
-.listTeamButton {
+.listTeamRemove {
     flex:1;
+    background-color:white;
+    color:grey;
+    border: 0px solid;
+    margin-bottom:5px;
+    text-align:center;
+    align-items:center;
+}
+.listTeamRemove:hover {
+    background-color:grey;
+    color:white;
+}
+.listTeamAdd {
+    flex:1;
+    background-color:white;
+    color:grey;
+    border: 0px solid;
+    margin-bottom:5px;
+    text-align:center;
+    align-items:center;
+}
+.listTeamAdd:hover {
+    background-color:grey;
+    color:white;
+}
+.listTeamAdd:disabled {
+    background-color:lightgrey;
+    color:white;
 }
 .roundContainer {
     display:block;

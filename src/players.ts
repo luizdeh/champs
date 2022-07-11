@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { Player, dbPlayers, savePlayer, formSubmit } from "./app";
+import { dbTeams, Player, dbPlayers, savePlayer, formSubmit } from "./app";
 
 const champs = document.getElementById('champs')
 
@@ -58,7 +58,7 @@ function addPlayer(name: string) {
     const id = uuidv4();
     if (name !== "") {
         const newDB = dbPlayers();
-        newDB.push({ id: id, name: name });
+        newDB.push({ id: id, name: name, teamId: null });
         savePlayer(newDB);
     }
     input.value = "";
@@ -87,18 +87,59 @@ function listPlayers() {
         let playerNumber = 1
         dbPlayers().forEach((player: Player) => {
             const listOfPlayers = document.createElement("li");
-            const button = document.createElement("button");
+            const playersListRemoveButton = document.createElement("button");
+            const listAddPlayer = document.createElement('button')
 
-            listOfPlayers.innerHTML = playerNumber++ + " : "+player.name + "  ";
-            button.innerText = `x`;
-            if (button) button.onclick = () => removePlayer(player.id);
+            playersListRemoveButton.classList.add('playersListRemoveButton')
+            listAddPlayer.classList.add('listAddPlayer')
 
-            listOfPlayers.appendChild(button);
+            playersListRemoveButton.id = player.id
+            listAddPlayer.id = player.id
+
+            const hasTeam = () => {
+                if (player.teamId === null) {
+                    return `Sem time`
+            } else {
+                return player.teamId
+                }
+            }
+
+            listOfPlayers.innerHTML = `${playerNumber++} : ${player.name} (${hasTeam()})`;
+            playersListRemoveButton.innerText = `[ remove ]`;
+            listAddPlayer.innerText = `[ add to team ]`
+
+            if (playersListRemoveButton) playersListRemoveButton.onclick = () => removePlayer(player.id);
+            // if (listAddPlayer) listAddPlayer.onclick = () => addPlayerToTeam(player.id)
+
+            listOfPlayers.appendChild(playersListRemoveButton);
+            listOfPlayers.appendChild(listAddPlayer)
             if (playersList) playersList.append(listOfPlayers);
         });
         findDuplicatePlayers();
     }
 }
+
+// function addPlayerToTeam(id: Player) {
+
+//     let playerId = id
+
+//     const players = dbPlayers()
+
+//     for (const player of players) {
+//         if (player.teamId !== null) {
+//             alert('Player already registered to a team!')
+//         }
+//     }
+
+//     const teams = dbTeams()
+
+//     for (const team of teams) {
+//         const teamButton = document.createElement('button')
+//         teamButton.innerText = `${team.name}`
+//         if (listOfPlayers) listOfPlayers.append(teamButton)
+
+//     }
+// }
 
 function findDuplicatePlayers() {
     const newDB = dbPlayers();

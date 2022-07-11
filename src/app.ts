@@ -36,17 +36,18 @@ export type Game = {
 export type EditionList = {
     id: string;
     name: string;
-}
+};
 
-const TeamsDB = "teams"
-const PlayersDB = "players"
-const GamesDB = "games"
+const TeamsDB = "teams";
+const PlayersDB = "players";
+const GamesDB = "games";
 
-export const dbTeams = () => JSON.parse(localStorage.getItem(TeamsDB) || '[]');
+export const dbTeams = () => JSON.parse(localStorage.getItem(TeamsDB) || "[]");
 
-export const dbPlayers = () => JSON.parse(localStorage.getItem(PlayersDB) || '[]')
+export const dbPlayers = () =>
+    JSON.parse(localStorage.getItem(PlayersDB) || "[]");
 
-export const dbGames = () => JSON.parse(localStorage.getItem(GamesDB) || '[]');
+export const dbGames = () => JSON.parse(localStorage.getItem(GamesDB) || "[]");
 
 export function saveTeam(content: Team) {
     return localStorage.setItem(TeamsDB, JSON.stringify(content));
