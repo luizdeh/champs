@@ -130,11 +130,9 @@ function populateTeamsList() {
     })
 }
 
-// function getTeamName(id: string) {
-
-//     return dbTeams().filter((team: Team) => team.id === id).map((name: Team) => name.name)[0]
-
-// }
+export function getTeamName(id: string) {
+    return dbTeams().filter((team: Team) => team.id === id).map((name: Team) => name.name)[0]
+}
 // function getTeamAbbr(id: string) {
 
 //     return dbTeams().filter((team: Team) => team.id === id).map((name: Team) => name.abbr)[0]

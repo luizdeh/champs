@@ -22,12 +22,14 @@ export type Game = {
     teams: {
         home: {
             id: string;
+            name: string;
             goals: number;
             whoScored: string;
             whoAssisted: string;
         };
         away: {
             id: string;
+            name: string;
             goals: number;
             whoScored: string;
             whoAssisted: string;
