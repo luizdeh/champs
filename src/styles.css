@@ -3,15 +3,60 @@ body {
     font-family: JetBrains Mono;
 }
 
+.nav {
+    color: grey;
+    background-color: lightgrey;
+    display:flex;
+    flex-direction:row;
+    width: 100%;
+    height: 60px;
+    justify-content:space-evenly;
+    margin-bottom:20px;
+    overflow:hidden;
+    align-items:center;
+}
+
+.navButton {
+    flex:1;
+    padding:10px;
+    color: grey;
+    background-color:lightgrey;
+    font-size: 20px;
+    font-weight:bold;
+    /* margin: 10px; */
+    text-align:center;
+}
+.navActive {
+    color: white;
+    background-color:grey;
+}
+.navButton:hover {
+    color: grey;
+    background-color:white;
+    cursor:pointer;
+}
+
+.teamsMarket {
+    border: 1px solid lightgrey;
+}
+.openMarketTeam:hover {
+    cursor:pointer;
+    background-color: grey;
+}
+
+.hidden {
+    display:none;
+}
 .champs {
     display:flex;
     flex-direction: row;
     justify-content:space-evenly;
 }
-
 .toggleTeamsButton {
     flex:0;
     margin: 15px;
+    width: 25%;
+    text-align:center;
     color: darkgrey;
     font-size: 16px;
     font-weight:bold;
@@ -25,10 +70,13 @@ body {
 .togglePlayerButton {
     flex:0;
     margin: 15px;
+    width: 25%;
+    text-align:center;
     color: darkgrey;
     font-size: 16px;
     font-weight:bold;
 }
+
 
 .togglePlayerButton:hover {
     color: white;
@@ -49,24 +97,33 @@ body {
     font-size: 12px;
 }
 
+.teamForm {
+    display:flex;
+    width:100%;
+}
+
 .teamSubmit {
+    flex:0;
     height: 27px;
     border: 0px solid;
     color:white;
     background-color:darkgrey;
+    border:1px solid grey;
+    margin-left: 5px;
 }
 
 .teamSubmit:hover {
     color: lighgrey;
     background-color:grey;
+    cursor:pointer;
 }
 
 .teamInput {
+    flex:1;
     height:25px;
     border: 0px solid;
-    color: darkgrey;
-    background-color:lightgrey;
     margin-bottom:10px;
+    border-bottom:1px solid grey;
 }
 
 .playerSubmit {
@@ -79,6 +136,7 @@ body {
 .playerSubmit:hover {
     color: lighgrey;
     background-color:grey;
+    cursor:pointer;
 
 }
 
@@ -90,52 +148,143 @@ body {
     margin-bottom:10px;
 }
 
+.positionInput {
+    height:25px;
+    width:30px;
+    border:0px solid;
+    border-bottom:1px solid grey;
+}
+.playerContainer {
+    display:flex;
+    align-items:center;
+}
+.playersList {
+    display:flex;
+    width:100%;
+    align-items:center;
+    margin-bottom: 10px;
+}
+.playerPosition {
+    flex:0.1;
+    font-size:14px;
+    padding:5px;
+    text-align:center;
+    border:1px solid darkgrey;
+}
+.playerPositionModal {
+    flex:1;
+    font-size:20px;
+    padding:5px;
+    margin:10px;
+    text-align:center;
+    border:1px solid darkgrey;
+    cursor:pointer;
+}
+.playerTeam {
+    flex:0.25;
+    font-size:14px;
+    padding:5px;
+    margin-right:10px;
+    text-align: right;
+}
 .teamsList {
     display:flex;
     margin-bottom: 10px;
 }
-
-.playersList {
-    margin-bottom: 10px;
+.teamContainerControl {
+    display:flex;
+    width:100%;
+    height:50px;
 }
-.newEdition {
-    display:block;
+.teamContainer {
+    flex:2;
+    display:flex;
+    align-items:center;
+    padding:5px;
+    margin:5px;
+    font-size:18px;
 }
-
-.listTeam {
+.teamControl {
     flex:1;
-    margin:10px;
+    display:flex;
+    align-items:center;
+    padding:5px;
+    margin:5px;
+}
+.listTeam {
+    flex:2;
+    padding:5px;
+    align-items:center;
+}
+.listAbbr {
+    flex:0;
+    text-align:center;
     font-size:14px;
+    font-weight:bold;
+    padding:12px;
+    /* border: 1px solid lightgrey; */
+    border-radius: 10px;
+}
+.listPlayers {
+    flex:1;
+    padding:5px;
+    font-size:14px;
+    align-items:center;
+    margin-left: 8px;
+}
+.listTeam:hover {
+    background-color:lightgrey;
+    color:white;
+    cursor:pointer;
 }
 .listTeamRemove {
-    flex:1;
+    flex:0.5;
     background-color:white;
     color:grey;
     border: 0px solid;
-    margin-bottom:5px;
     text-align:center;
-    align-items:center;
+    padding:10px;
+    margin-right: 2px;
 }
 .listTeamRemove:hover {
     background-color:grey;
     color:white;
+    cursor:pointer;
+}
+.listTeamRemove:disabled {
+    background-color:lightgrey;
+    color:white;
+    cursor:default;
 }
 .listTeamAdd {
-    flex:1;
+    flex:0.5;
     background-color:white;
     color:grey;
     border: 0px solid;
-    margin-bottom:5px;
     text-align:center;
-    align-items:center;
+    padding:10px;
+    margin-right: 2px;
 }
 .listTeamAdd:hover {
     background-color:grey;
     color:white;
+    cursor:pointer
 }
 .listTeamAdd:disabled {
     background-color:lightgrey;
     color:white;
+    cursor:default;
+}
+
+.eachTeam {
+    font-size:18px;
+    padding:5px;
+    margin:10px;
+}
+
+.eachTeam:hover {
+    background-color:lightgrey;
+    cursor:pointer;
 }
 .roundContainer {
     display:block;
@@ -235,3 +384,34 @@ body {
     flex:1;
     text-align:center;
 }
+.modal {
+    position:fixed;
+    z-index:1;
+    left:0;
+    top:0;
+    width:100%;
+    height:100%;
+    overflow:auto;
+}
+
+.closeModal {
+    color:grey;
+    float:right;
+    font-size: 36px;
+    font-weight:bold;
+}
+.closeModal:hover,
+.closeModal:focus{
+    color: black;
+    text-decoration:none;
+    cursor:pointer;
+}
+.modalContent {
+    overflow:auto;
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 25%;
+}
+

@@ -1,6 +1,8 @@
 import { v4 as uuidv4 } from "uuid";
 import { Team, Game, dbTeams, dbGames, saveGame, formSubmit } from "./app";
 
+const showChamps = document.getElementById('showChamps')
+
 // add the button element to create new editions
 const newEdition = document.createElement("div");
 newEdition.classList.add("newEdition");
@@ -10,12 +12,13 @@ const newEditionButton = document.createElement("button");
 newEditionButton.classList.add("newEditionButton");
 newEditionButton.innerHTML = "create new champs edition";
 
-document.body.appendChild(newEdition);
+showChamps.appendChild(newEdition);
 newEdition.appendChild(newEditionButton);
 newEditionButton.disabled = true
 
 // enable/disable the button to create new editions
 export function enableNewEditionButton() {
+    // reference editionlist instead of dbteams
     if (dbTeams().length >= 3) {
         newEditionButton.disabled = false
         newEditionButton.addEventListener("click", () => createEdition());
@@ -26,20 +29,21 @@ export function enableNewEditionButton() {
 }
 
 // make a randomized list from selected teams
+// transform this variable to a state through localstorage
 let editionList = [];
 
-export function generateTeamsList(id: Team, name: Team) {
-    editionList.push({ id: id, name: name });
+export function generateTeamsList(id: string) {
+    editionList.push({id: id});
     if (editionList.length > 0) {
         editionList.sort(() => Math.random() - 0.5);
     }
 
-    const teamContainer = document.getElementById(id);
-    const listTeamAdded = teamContainer?.getElementsByClassName("listTeamAdd")[0] as HTMLButtonElement;
-    const listTeamRemoved= teamContainer?.getElementsByClassName("listTeamRemove")[0] as HTMLButtonElement;
+    const teamContainerControl = document.getElementById(id);
+    const listTeamAdded = teamContainerControl?.getElementsByClassName("listTeamAdd")[0] as HTMLButtonElement;
+    const listTeamRemoved= teamContainerControl?.getElementsByClassName("listTeamRemove")[0] as HTMLButtonElement;
     listTeamAdded.disabled = true;
     listTeamRemoved.disabled = true;
-
+    // add to database to avoid shithousery
     enableNewEditionButton()
 
     return editionList;
@@ -143,12 +147,7 @@ function genGamesTable(players: any[]) {
 function createEdition() {
     // add date to current edition
     const today = new Date();
-    const dayOfChamps =
-        today.getFullYear() +
-        "." +
-        (today.getMonth() + 1) +
-        "." +
-        today.getDate();
+    const dayOfChamps = today.getFullYear() +"."+(today.getMonth() + 1)+"." +today.getDate();
 
     // create title for the edition
     const title = document.createElement("div");

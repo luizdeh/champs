@@ -1,107 +1,161 @@
 import { v4 as uuidv4 } from "uuid";
-import { dbGames, Team, dbTeams, saveTeam, formSubmit } from "./app";
+import { dbPlayers, Player, dbGames, Game, dbTeams, Team, saveTeam, formSubmit } from "./app";
 import { generateTeamsList, enableNewEditionButton } from "./editions";
+import { colors } from "./appConfig"
 
-const champs = document.getElementById("champs");
-
-const toggleTeamsButton = document.createElement("toggleTeamsButton");
-const toggleTeams = document.createElement("toggleTeams");
-
-toggleTeamsButton.classList.add("toggleTeamsButton");
-toggleTeams.classList.add("toggleTeams");
-
-toggleTeamsButton.style.cursor = "pointer";
-toggleTeamsButton.innerHTML = `${"TEAMS"}`;
-toggleTeamsButton.addEventListener("click", () => toggleHideTeams());
-
-// champs.appendChild(toggleTeams);
-
-function toggleHideTeams() {
-    if (toggleTeams.style.display === "none") {
-        toggleTeams.style.display = "block";
-    } else {
-        toggleTeams.style.display = "none";
-    }
-}
+const showTeams = document.getElementById('showTeams')
 
 // Set form to add teams
 const teamForm = document.createElement("form");
 const teamInput = document.createElement("input");
+const abbrInput = document.createElement('input')
 const teamSubmit = document.createElement("button");
+const teamsList = document.createElement("div");
 
 teamForm.classList.add("teamForm");
 teamInput.classList.add("teamInput");
+abbrInput.classList.add('teamInput')
 teamSubmit.classList.add("teamSubmit");
 
 teamForm.id = "teamForm";
 teamInput.id = "teamInput";
 teamSubmit.id = "teamSubmit";
+teamsList.id = "teamsList";
+abbrInput.id = 'abbrInput'
 
 teamForm.setAttribute("method", "post");
 
 teamInput.setAttribute("type", "text");
 teamInput.setAttribute("placeholder", "+ add team");
+teamInput.setAttribute('required', 'please enter only letters')
+// teamInput.setAttribute('maxlength', '45')
+teamInput.setAttribute('pattern', '[a-zA-z]{3,45}')
+teamInput.setAttribute('autocomplete', 'off')
+
+abbrInput.setAttribute('type', 'text')
+abbrInput.setAttribute('placeholder', 'three letter abbreviation')
+abbrInput.setAttribute('name', 'acronym')
+abbrInput.setAttribute('required', 'please enter three letters')
+abbrInput.setAttribute('minlength', '3')
+abbrInput.setAttribute('maxlength', '3')
+abbrInput.setAttribute('pattern', '[a-zA-z]{3}')
+teamInput.setAttribute('autocomplete', 'off')
 
 teamSubmit.setAttribute("value", "Submit");
-
 teamSubmit.innerText = `save`;
 
-champs.appendChild(toggleTeamsButton);
-champs.appendChild(toggleTeams);
-toggleTeams.appendChild(teamForm);
 teamForm.appendChild(teamInput);
+teamForm.appendChild(abbrInput)
 teamForm.appendChild(teamSubmit);
+showTeams.appendChild(teamForm);
+showTeams.appendChild(teamsList);
 
 if (teamForm) teamForm.onsubmit = formSubmit;
 if (teamInput && teamSubmit)
-    teamSubmit.addEventListener("click", () => addTeam(teamInput.value));
+    teamSubmit.addEventListener("click", () => addTeam(teamInput.value, abbrInput.value));
+
+function emptyMessage(div: HTMLElement) {
+
+    const emptyMessage = document.createElement("p");
+    emptyMessage.innerText = `There are currently NO TEAMS registered!`;
+    div.appendChild(emptyMessage);
+}
+
+function createTeamContainer(id: string) {
+
+        const teamObject = dbTeams().filter((team: Team) => team.id === id)
+
+        const teamContainer = document.createElement("div");
+        const listTeam = document.createElement("p");
+        const listAbbr = document.createElement("p")
+
+        teamContainer.classList.add("teamContainer");
+        listTeam.classList.add("listTeam");
+        listAbbr.classList.add("listAbbr")
+
+        // teamContainer.id = teamObject[0].id;
+
+        listTeam.innerHTML = `${teamObject[0].name}`
+        listAbbr.innerHTML = `${teamObject[0].abbr}`
+
+        listAbbr.style.color = colors.primary[teamObject[0].abbr]
+        listAbbr.style.backgroundColor = colors.secondary[teamObject[0].abbr]
+
+        teamContainer.appendChild(listTeam);
+        teamContainer.appendChild(listAbbr);
+
+        return teamContainer
+}
+
+function createTeamControl(id: string) {
+
+        // const teamObject = dbTeams().filter((team: Team) => team.id === id)
+
+        const teamControl = document.createElement('div')
+        const listTeamRemove = document.createElement("button");
+        const listTeamAdd = document.createElement("button");
+
+        teamControl.classList.add('teamControl')
+        listTeamRemove.classList.add("listTeamRemove");
+        listTeamAdd.classList.add("listTeamAdd");
+
+        // teamControl.id = teamObject[0].id
+
+        listTeamRemove.innerText = `[ remove ]`;
+        listTeamAdd.innerText = `[ add to next edition ]`;
+
+        teamControl.appendChild(listTeamRemove)
+        teamControl.appendChild(listTeamAdd)
+
+        if (checkRoster(id)) listTeamRemove.disabled = true
+        if (listTeamRemove) listTeamRemove.onclick = () => removeTeam(id);
+        if (listTeamAdd) listTeamAdd.onclick = () => generateTeamsList(id);
+
+        return teamControl
+}
+function populateTeamsList() {
+    dbTeams().forEach((team: Team) => {
+        const teamsList = document.getElementById('teamsList')
+
+        let container = createTeamContainer(team.id)
+        let control = createTeamControl(team.id)
+
+        const teamContainerControl = document.createElement('div')
+        teamContainerControl.classList.add('teamContainerControl')
+        teamContainerControl.id = team.id
+        teamContainerControl.appendChild(container)
+        teamContainerControl.appendChild(control)
+        teamsList.appendChild(teamContainerControl)
+
+    })
+}
+
+// function getTeamName(id: string) {
+
+//     return dbTeams().filter((team: Team) => team.id === id).map((name: Team) => name.name)[0]
+
+// }
+// function getTeamAbbr(id: string) {
+
+//     return dbTeams().filter((team: Team) => team.id === id).map((name: Team) => name.abbr)[0]
+// }
 
 //list team
-function listTeams() {
+export function listTeams() {
+
     if (teamsList) teamsList.innerHTML = "";
+
     const empty = () => dbTeams().length === 0 || undefined;
 
-    if (teamsList && empty()) {
-        const emptyMessage = document.createElement("p");
-        emptyMessage.innerText = `There are currently NO TEAMS registered!`;
-        teamsList.appendChild(emptyMessage);
-    }
+    if (teamsList && empty()) { emptyMessage(teamsList) }
 
     if (teamsList && !empty()) {
-        let teamNumber = 1;
-
-        // Loop through the teams array and populate the list in the DOM
-        dbTeams().forEach((team: Team) => {
-            const teamContainer = document.createElement("div");
-            const listTeam = document.createElement("li");
-            const listTeamRemove = document.createElement("button");
-            const listTeamAdd = document.createElement("button");
-
-            teamContainer.classList.add("teamContainer");
-            listTeam.classList.add("listTeam");
-            listTeamRemove.classList.add("listTeamRemove");
-            listTeamAdd.classList.add("listTeamAdd");
-
-            teamContainer.id = team.id;
-            listTeam.id = team.id;
-            listTeamRemove.id = team.id;
-            listTeamAdd.id = team.id;
-
-            listTeam.innerHTML = teamNumber++ + " : " + team.name + "   ";
-            listTeamRemove.innerText = `[ remove ]`;
-            listTeamAdd.innerText = `[ add to next edition ]`;
-            if (listTeamRemove) listTeamRemove.onclick = () => removeTeam(team.id);
-            if (listTeamAdd) listTeamAdd.onclick = () => generateTeamsList(team.id, team.name);
-
-            if (teamsList) teamsList.appendChild(teamContainer);
-            teamContainer.appendChild(listTeam);
-            teamContainer.appendChild(listTeamRemove);
-            teamContainer.appendChild(listTeamAdd);
-        });
+        populateTeamsList()
         findDuplicateTeams();
     }
     enableNewEditionButton();
 }
+
 
 function findDuplicateTeams() {
     const newDB = dbTeams();
@@ -112,16 +166,11 @@ function findDuplicateTeams() {
         if (unique.size < newDB.length) {
             let duplicates = newDB
                 .map((item: string) => item["name"])
-                .map(
-                    (item: string, index: number, final: string) =>
-                        final.indexOf(item) !== index && index
-                )
+                .map((item: string, index: number, final: string) => final.indexOf(item) !== index && index)
                 .filter((obj: string) => newDB[obj])
                 .map((item: string) => newDB[item]["id"]);
 
-            let uniques = newDB.filter(
-                (obj: Team) => !duplicates.includes(obj.id)
-            );
+            let uniques = newDB.filter((obj: Team) => !duplicates.includes(obj.id));
 
             saveTeam(uniques);
 
@@ -134,44 +183,39 @@ function findDuplicateTeams() {
     }
 }
 // add team
-function addTeam(name: string) {
-    const input = document.getElementById("teamInput") as HTMLInputElement;
+function addTeam(name: string, abbr: string) {
+    const teamInput = document.getElementById("teamInput") as HTMLInputElement;
+    const abbrInput = document.getElementById("abbrInput") as HTMLInputElement;
     const id = uuidv4();
     if (name !== "") {
         const newDB = dbTeams();
-        newDB.push({ id: id, name: name });
-        saveTeam(newDB);
+        if (abbrInput.value) {
+            newDB.push({ id: id, name: name, abbr: abbr});
+            saveTeam(newDB);
+        }
     }
-    input.value = "";
+    teamInput.value = "";
+    abbrInput.value = "";
     listTeams();
 }
 // remove team
 function removeTeam(id: string) {
-    const games = dbGames();
-    let played = [];
-    // const uniques = [...new Set(what)]
-    for (let i = 0; i < games.length; i++) {
-        let home = games[i].teams.home.id;
-        let away = games[i].teams.away.id;
-        played.push(home, away);
-    }
-    let what = played.map((item: string) => item === id);
-    let uniqueHome = [...new Set(what)];
-    if (uniqueHome.length === 1) {
-        const result = dbTeams().filter((item: string) => item.id !== id);
-        saveTeam(result);
-        listTeams();
-    }
-    const teamContainer = document.getElementById(id);
-    const listTeamRemoved = teamContainer?.getElementsByClassName(
-        "listTeamRemove"
-    )[0] as HTMLButtonElement;
-    listTeamRemoved.disabled = true;
-    alert("Team has participated in a champs, cannot remove");
+    const result = dbTeams().filter((item: Team) => item.id !== id);
+    saveTeam(result);
     listTeams();
 }
 
-const teamsList = document.createElement("div");
-teamsList.id = "teamsList";
-toggleTeams.appendChild(teamsList);
+function checkRoster(id: string) {
+
+    const teamId = id
+
+    const player = dbPlayers().filter((player: Player) => player.teamId === teamId)
+
+    if (player.length > 0) {
+        return true
+    } else {
+        return false
+    }
+}
+
 listTeams();

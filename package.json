@@ -18,7 +18,6 @@
     "parcel": "^2.6.2"
   },
   "dependencies": {
-    "lowdb": "^3.0.0",
     "uuid": "^8.3.2"
   }
 }

@@ -1,68 +1,66 @@
 import { v4 as uuidv4 } from "uuid";
-import { dbTeams, Player, dbPlayers, savePlayer, formSubmit } from "./app";
+import { dbTeams, Team, Player, dbPlayers, savePlayer, formSubmit } from "./app";
+import { listTeams } from "./teams"
+import { position, colors } from "./appConfig"
 
-const champs = document.getElementById('champs')
-
-const togglePlayerButton = document.createElement("togglePlayerButton");
-const togglePlayers = document.createElement("togglePlayers");
-
-togglePlayerButton.classList.add("togglePlayerButton");
-togglePlayers.classList.add("togglePlayers");
-
-togglePlayerButton.style.cursor = "pointer";
-togglePlayerButton.innerHTML = `${"PLAYERS"}`;
-togglePlayerButton.addEventListener("click", () => toggleHidePlayers());
-
-champs.appendChild(togglePlayers);
-
-function toggleHidePlayers() {
-    if (togglePlayers.style.display === "none") {
-        togglePlayers.style.display = "block";
-    } else {
-        togglePlayers.style.display = "none";
-    }
-}
+const showPlayers = document.getElementById("showPlayers");
 
 const playerForm = document.createElement("form");
 const playerInput = document.createElement("input");
+const positionInput = document.createElement("input");
 const playerSubmit = document.createElement("button");
+const playersList = document.createElement("div");
 
-playerForm.classList.add("playerForm");
-playerInput.classList.add("playerInput");
-playerSubmit.classList.add("playerSubmit");
+playerForm.classList.add("teamForm");
+playerInput.classList.add("teamInput");
+positionInput.classList.add("positionInput");
+playerSubmit.classList.add("teamSubmit");
 
 playerForm.id = "playerForm";
 playerInput.id = "playerInput";
+positionInput.id = "positionInput";
 playerSubmit.id = "playerSubmit";
+playersList.id = "playersList";
 
 playerForm.setAttribute("method", "post");
 
 playerInput.setAttribute("type", "text");
 playerInput.setAttribute("placeholder", "+ add player");
 
+positionInput.setAttribute("placeholder", "");
+positionInput.setAttribute("readonly", "");
+
 playerSubmit.setAttribute("value", "Submit");
 playerSubmit.innerText = `save`;
 
-champs.appendChild(togglePlayerButton);
-champs.appendChild(togglePlayers);
-togglePlayers.appendChild(playerForm);
-playerForm.appendChild(playerInput);
-playerForm.appendChild(playerSubmit);
+if (showPlayers) {
+    playerForm.appendChild(playerInput);
+    playerForm.appendChild(positionInput);
+    playerForm.appendChild(playerSubmit);
+    showPlayers.appendChild(playerForm);
+    showPlayers.appendChild(playersList);
+}
 
 if (playerForm) playerForm.onsubmit = formSubmit;
 if (playerForm && playerSubmit)
-    playerSubmit.addEventListener("click", () => addPlayer(playerInput.value));
+    playerSubmit.addEventListener("click", () => openPositionModal());
 
-function addPlayer(name: string) {
-    const input = document.getElementById("playerInput") as HTMLInputElement;
+function addPlayer(name: string, position: string) {
+    const playerInput = document.getElementById(
+        "playerInput"
+    ) as HTMLInputElement;
+    const positionInput = document.getElementById(
+        "positionInput"
+    ) as HTMLInputElement;
     const id = uuidv4();
     if (name !== "") {
         const newDB = dbPlayers();
-        newDB.push({ id: id, name: name, teamId: null });
+        newDB.push({ id: id, position: position, name: name, teamId: null });
         savePlayer(newDB);
     }
-    input.value = "";
     listPlayers();
+    playerInput.value = "";
+    positionInput.value = "";
 }
 
 function removePlayer(id: Player) {
@@ -84,62 +82,77 @@ function listPlayers() {
     }
 
     if (playersList && !empty()) {
-        let playerNumber = 1
         dbPlayers().forEach((player: Player) => {
-            const listOfPlayers = document.createElement("li");
+            const playerContainer = document.createElement("div");
+            const playerListing = document.createElement("div");
+            const playerPosition = document.createElement("div");
+            const playerTeam = document.createElement("div");
             const playersListRemoveButton = document.createElement("button");
-            const listAddPlayer = document.createElement('button')
+            const listAddPlayer = document.createElement("button");
+            const removeFromTeam = document.createElement('button')
 
-            playersListRemoveButton.classList.add('playersListRemoveButton')
-            listAddPlayer.classList.add('listAddPlayer')
+            playerContainer.classList.add("playerContainer");
+            playerPosition.classList.add("playerPosition");
+            playerListing.classList.add("listPlayers");
+            playersListRemoveButton.classList.add("listTeamRemove");
+            listAddPlayer.classList.add("listTeamAdd");
+            playerTeam.classList.add("playerTeam");
+            removeFromTeam.classList.add('listTeamRemove')
 
-            playersListRemoveButton.id = player.id
-            listAddPlayer.id = player.id
+            playerContainer.id = player.id;
+            playerPosition.id = player.id;
+            playerListing.id = player.id;
+            playersListRemoveButton.id = player.id;
+            listAddPlayer.id = player.id;
+            playerTeam.id = player.id;
+            removeFromTeam.id = player.id
+
+            const isHired = dbTeams()
+                .map((team: Team) => team.id)
+                .indexOf(player.teamId);
 
             const hasTeam = () => {
-                if (player.teamId === null) {
-                    return `Sem time`
-            } else {
-                return player.teamId
+                if (isHired === -1 || isHired === null) {
+                    return `sem time`;
+                } else {
+                    return `${dbTeams()[isHired].abbr}`;
                 }
-            }
+            };
 
-            listOfPlayers.innerHTML = `${playerNumber++} : ${player.name} (${hasTeam()})`;
+            playerPosition.innerHTML = `${player.position}`;
+            playerPosition.style.backgroundColor = colors.playerPosition[player.position]
+            playerListing.innerHTML = `${player.name.toUpperCase()}`;
+            playerTeam.innerHTML = `${hasTeam()}`;
+            playerTeam.style.color = colors.primary[hasTeam()]
+            playerTeam.style.backgroundColor = colors.secondary[hasTeam()]
             playersListRemoveButton.innerText = `[ remove ]`;
-            listAddPlayer.innerText = `[ add to team ]`
+            listAddPlayer.innerText = `[ add to team ]`;
+            removeFromTeam.innerText = `[ remove from team ]`
+            removeFromTeam.disabled = true
 
-            if (playersListRemoveButton) playersListRemoveButton.onclick = () => removePlayer(player.id);
-            // if (listAddPlayer) listAddPlayer.onclick = () => addPlayerToTeam(player.id)
+            if (playersListRemoveButton)
+                playersListRemoveButton.onclick = () => removePlayer(player.id);
+            if (listAddPlayer)
+                listAddPlayer.onclick = () => openPlayerModal(player.id);
 
-            listOfPlayers.appendChild(playersListRemoveButton);
-            listOfPlayers.appendChild(listAddPlayer)
-            if (playersList) playersList.append(listOfPlayers);
+            playerContainer.appendChild(playerPosition);
+            playerContainer.appendChild(playerListing);
+            playerContainer.appendChild(playerTeam);
+            playerContainer.appendChild(playersListRemoveButton);
+            playerContainer.appendChild(listAddPlayer);
+            playerContainer.appendChild(removeFromTeam)
+            if (playersList) playersList.append(playerContainer);
+            if (playerTeam.innerHTML !== 'sem time') {
+                listAddPlayer.disabled = true
+                playersListRemoveButton.disabled = true
+                removeFromTeam.disabled = false
+                if (removeFromTeam) removeFromTeam.addEventListener('click', () => removePlayerFromTeam(player.id))
+            }
         });
         findDuplicatePlayers();
+        listTeams();
     }
 }
-
-// function addPlayerToTeam(id: Player) {
-
-//     let playerId = id
-
-//     const players = dbPlayers()
-
-//     for (const player of players) {
-//         if (player.teamId !== null) {
-//             alert('Player already registered to a team!')
-//         }
-//     }
-
-//     const teams = dbTeams()
-
-//     for (const team of teams) {
-//         const teamButton = document.createElement('button')
-//         teamButton.innerText = `${team.name}`
-//         if (listOfPlayers) listOfPlayers.append(teamButton)
-
-//     }
-// }
 
 function findDuplicatePlayers() {
     const newDB = dbPlayers();
@@ -167,7 +180,116 @@ function findDuplicatePlayers() {
     }
 }
 
-const playersList = document.createElement("div");
-playersList.id = "playersList";
-togglePlayers.appendChild(playersList);
+function removePlayerFromTeam(id: string) {
+    const players = dbPlayers();
+
+    const playerId = id;
+
+    const currentPlayer = players.findIndex((item: Player) => item.id === playerId);
+
+    players[currentPlayer].teamId = null
+    savePlayer(players);
+    listPlayers();
+}
+
+const openModal = document.createElement("div");
+openModal.id = "modal";
+openModal.classList.add("modal");
+openModal.classList.add("hidden");
+
+const closeModal = document.createElement("span");
+closeModal.id = "closeModal";
+closeModal.classList.add("closeModal");
+
+const playerModal = document.createElement("div");
+playerModal.id = "playerModal";
+playerModal.classList.add("modalContent");
+playerModal.classList.add("hidden");
+
+const positionModal = document.createElement("div");
+positionModal.id = "positionModal";
+positionModal.classList.add("modalContent");
+positionModal.classList.add("hidden");
+
+document.body.appendChild(openModal);
+openModal.appendChild(positionModal);
+openModal.appendChild(closeModal);
+openModal.appendChild(playerModal);
+
+function openPlayerModal(id: string) {
+    const openModal = document.getElementById("modal");
+
+    const playerModal = document.getElementById("playerModal");
+
+    openModal.classList.remove("hidden");
+    playerModal.classList.remove("hidden")
+
+    const teams = dbTeams();
+
+    teams.forEach((team: Team) => {
+        const eachTeam = document.createElement("p");
+        eachTeam.innerHTML = `${team.name}`;
+        eachTeam.id = team.id;
+        eachTeam.classList.add('eachTeam')
+        playerModal.appendChild(eachTeam);
+        eachTeam.addEventListener("click", () => pushToTeam(team.id));
+    });
+
+    const players = dbPlayers();
+
+    const playerId = id;
+
+    const currentPlayer = players.findIndex((item: Player) => item.id === playerId);
+
+    function pushToTeam(id: string) {
+        players[currentPlayer].teamId = id;
+        savePlayer(players);
+        playerModal.innerHTML = "";
+        playerModal.classList.add("hidden");
+        openModal.classList.add("hidden");
+        listPlayers();
+    }
+
+    window.addEventListener('click', (event) => {
+        if (event.target == openModal) {
+            openModal.classList.add('hidden')
+            playerModal.innerHTML =""
+        }
+    })
+}
+
+function openPositionModal() {
+    const openModal = document.getElementById("modal");
+
+    const positionModal = document.getElementById("positionModal");
+
+    openModal.classList.remove("hidden");
+    positionModal.classList.remove("hidden");
+
+    for (const pos in position) {
+        const showEach = document.createElement("div");
+        showEach.innerHTML = `${pos}`;
+        showEach.classList.add('playerPositionModal')
+        showEach.style.backgroundColor = colors.playerPosition[pos]
+        positionModal.appendChild(showEach);
+        showEach.addEventListener("click", () => chooseAndClose(pos));
+    }
+
+    function chooseAndClose(item: string) {
+        positionInput.value = item;
+        addPlayer(playerInput.value, positionInput.value);
+        positionModal.classList.add("hidden");
+        openModal.classList.add("hidden");
+        listPlayers();
+    }
+
+    window.addEventListener('click', (event) => {
+        if (event.target == openModal) {
+            openModal.classList.add('hidden')
+            positionModal.innerHTML = ""
+        }
+    })
+}
+
+
 listPlayers();
