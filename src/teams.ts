@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
-import { dbPlayers, Player, dbGames, Game, dbTeams, Team, saveTeam, formSubmit } from "./app";
+import { dbPlayers, Player, dbGames, Game, dbTeams, Team, saveTeam, formSubmit, emptyMessage } from "./app";
 import { generateTeamsList, enableNewEditionButton } from "./editions";
-import { colors } from "./appConfig"
+import { colors, teamsPalette } from "./appConfig"
 
 const showTeams = document.getElementById('showTeams')
 
@@ -16,12 +16,13 @@ teamForm.classList.add("teamForm");
 teamInput.classList.add("teamInput");
 abbrInput.classList.add('teamInput')
 teamSubmit.classList.add("teamSubmit");
+teamsList.classList.add("teamsList");
 
 teamForm.id = "teamForm";
 teamInput.id = "teamInput";
+abbrInput.id = 'abbrInput'
 teamSubmit.id = "teamSubmit";
 teamsList.id = "teamsList";
-abbrInput.id = 'abbrInput'
 
 teamForm.setAttribute("method", "post");
 
@@ -47,59 +48,51 @@ teamSubmit.innerText = `save`;
 teamForm.appendChild(teamInput);
 teamForm.appendChild(abbrInput)
 teamForm.appendChild(teamSubmit);
-showTeams.appendChild(teamForm);
-showTeams.appendChild(teamsList);
+if (showTeams) showTeams.appendChild(teamForm);
+if (showTeams) showTeams.appendChild(teamsList);
 
 if (teamForm) teamForm.onsubmit = formSubmit;
 if (teamInput && teamSubmit)
     teamSubmit.addEventListener("click", () => addTeam(teamInput.value, abbrInput.value));
 
-function emptyMessage(div: HTMLElement) {
-
-    const emptyMessage = document.createElement("p");
-    emptyMessage.innerText = `There are currently NO TEAMS registered!`;
-    div.appendChild(emptyMessage);
-}
-
-function createTeamContainer(id: string) {
+function renderTeamContainer(id: string) {
 
         const teamObject = dbTeams().filter((team: Team) => team.id === id)
 
         const teamContainer = document.createElement("div");
-        const listTeam = document.createElement("p");
-        const listAbbr = document.createElement("p")
+        const teamName = document.createElement("p");
+        const teamAbbr = document.createElement("p")
 
         teamContainer.classList.add("teamContainer");
-        listTeam.classList.add("listTeam");
-        listAbbr.classList.add("listAbbr")
+        teamName.classList.add("teamName");
+        teamAbbr.classList.add("teamAbbr")
 
-        // teamContainer.id = teamObject[0].id;
+        teamName.innerHTML = `${teamObject[0].name}`
+        teamAbbr.innerHTML = `${teamObject[0].abbr}`
 
-        listTeam.innerHTML = `${teamObject[0].name}`
-        listAbbr.innerHTML = `${teamObject[0].abbr}`
+        let colorsExists = Object.values(teamsPalette).includes(teamObject[0].abbr)
+        if (colorsExists){
+            teamAbbr.style.color = colors.teamsPalette[teamObject[0].abbr].primary
+            teamAbbr.style.backgroundColor = colors.teamsPalette[teamObject[0].abbr].secondary
+        }
 
-        listAbbr.style.color = colors.primary[teamObject[0].abbr]
-        listAbbr.style.backgroundColor = colors.secondary[teamObject[0].abbr]
-
-        teamContainer.appendChild(listTeam);
-        teamContainer.appendChild(listAbbr);
+        teamName.addEventListener('click', () => toggleTeamRoster(id))
+      
+        teamContainer.appendChild(teamName);
+        teamContainer.appendChild(teamAbbr);
 
         return teamContainer
 }
 
-function createTeamControl(id: string) {
-
-        // const teamObject = dbTeams().filter((team: Team) => team.id === id)
+function renderTeamControl(id: string) {
 
         const teamControl = document.createElement('div')
         const listTeamRemove = document.createElement("button");
         const listTeamAdd = document.createElement("button");
 
-        teamControl.classList.add('teamControl')
-        listTeamRemove.classList.add("listTeamRemove");
-        listTeamAdd.classList.add("listTeamAdd");
-
-        // teamControl.id = teamObject[0].id
+        teamControl.classList.add("teamControl")
+        listTeamRemove.classList.add("controlButton");
+        listTeamAdd.classList.add("controlButton");
 
         listTeamRemove.innerText = `[ remove ]`;
         listTeamAdd.innerText = `[ add to next edition ]`;
@@ -113,32 +106,82 @@ function createTeamControl(id: string) {
 
         return teamControl
 }
+
+function renderTeamRoster(id: string) {
+
+        const roster = getRoster(id)
+
+        const teamRoster = document.createElement("div");
+        teamRoster.classList.add("teamRoster");
+        teamRoster.dataset.id = id
+        teamRoster.classList.add('hidden')
+
+        roster.forEach((player: Player) => {
+
+            const rosterPlayerContainer = document.createElement("div")
+            const rosterPlayerName = document.createElement("div");
+            const rosterPlayerPosition = document.createElement("div");
+
+            rosterPlayerContainer.classList.add("rosterPlayerContainer")
+            rosterPlayerPosition.classList.add("rosterPlayerPosition");
+            rosterPlayerName.classList.add("rosterPlayerName");
+            
+            rosterPlayerPosition.innerHTML = `${player.position}`;
+            rosterPlayerPosition.style.backgroundColor = colors.playerPosition[player.position]
+            
+            rosterPlayerName.innerHTML = `${player.name.toUpperCase()}`;
+
+            rosterPlayerContainer.appendChild(rosterPlayerPosition)
+            rosterPlayerContainer.appendChild(rosterPlayerName)
+            teamRoster.appendChild(rosterPlayerContainer);
+
+        })
+        return teamRoster
+}
+function getRoster(id: string) {
+    const teamId = id
+    const roster = dbPlayers().filter((player: Player) => player.teamId === teamId)
+    roster.sort((a: Player, b: Player) => a.name.localeCompare(b.name));
+    return roster
+}
+function toggleTeamRoster(id: string) {
+    const teamRoster = document.querySelector(`.teamRoster[data-id="${id}"]`)
+    
+    if (teamRoster) {
+        if (teamRoster.classList.contains('hidden')) {
+            teamRoster.classList.remove('hidden')
+        } else {
+            teamRoster.classList.add('hidden')
+        }
+    }
+}
 function populateTeamsList() {
-    dbTeams().forEach((team: Team) => {
+    const teams = dbTeams()
+    teams.sort((a: Team, b: Team) => a.name.localeCompare(b.name));
+    teamsList.innerHTML = "";
+    teams.forEach((team: Team) => {
         const teamsList = document.getElementById('teamsList')
 
-        let container = createTeamContainer(team.id)
-        let control = createTeamControl(team.id)
-
+        let container = renderTeamContainer(team.id)
+        let control = renderTeamControl(team.id)
+        let roster = renderTeamRoster(team.id)
+       
         const teamContainerControl = document.createElement('div')
         teamContainerControl.classList.add('teamContainerControl')
         teamContainerControl.id = team.id
         teamContainerControl.appendChild(container)
         teamContainerControl.appendChild(control)
-        teamsList.appendChild(teamContainerControl)
-
+        if (teamsList) teamsList.appendChild(teamContainerControl)
+        if (teamsList) teamsList.appendChild(roster)
     })
 }
 
-// function getTeamName(id: string) {
-
-//     return dbTeams().filter((team: Team) => team.id === id).map((name: Team) => name.name)[0]
-
-// }
-// function getTeamAbbr(id: string) {
-
-//     return dbTeams().filter((team: Team) => team.id === id).map((name: Team) => name.abbr)[0]
-// }
+export function getTeamName(id: string) {
+    return dbTeams().filter((team: Team) => team.id === id).map((name: Team) => name.name)[0]
+}
+export function getTeamAbbr(id: string) {
+    return dbTeams().filter((team: Team) => team.id === id).map((name: Team) => name.abbr)[0]
+}
 
 //list team
 export function listTeams() {
@@ -206,16 +249,14 @@ function removeTeam(id: string) {
 }
 
 function checkRoster(id: string) {
-
     const teamId = id
-
     const player = dbPlayers().filter((player: Player) => player.teamId === teamId)
-
     if (player.length > 0) {
         return true
     } else {
         return false
     }
 }
+
 
 listTeams();

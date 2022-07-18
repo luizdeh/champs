@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
-import { Team, Game, dbTeams, dbGames, saveGame, formSubmit } from "./app";
+import { Game, dbTeams, dbGames, saveGame, formSubmit,  } from "./app";
+import {getTeamName} from "./teams";
 
 const showChamps = document.getElementById('showChamps')
 
@@ -12,11 +13,17 @@ const newEditionButton = document.createElement("button");
 newEditionButton.classList.add("newEditionButton");
 newEditionButton.innerHTML = "create new champs edition";
 
-showChamps.appendChild(newEdition);
+if (showChamps) showChamps.appendChild(newEdition);
 newEdition.appendChild(newEditionButton);
 newEditionButton.disabled = true
 
 // enable/disable the button to create new editions
+// make this button a floating disabled thing at the bottom of the page
+// when it becomes enabled, add the list to saveState and generate the games table, but don't render it yet
+// make another function to render the games table and make it collapsible
+// make sure nothing else happens when an edition is created and is active ( create active and inactive state of editions )
+// create a 'pause edition' function that will disable the edition and make it inactive
+// make sure no teams can transfer players and no players or team can be deleted, but teams/players can be created
 export function enableNewEditionButton() {
     // reference editionlist instead of dbteams
     if (dbTeams().length >= 3) {
@@ -30,19 +37,18 @@ export function enableNewEditionButton() {
 
 // make a randomized list from selected teams
 // transform this variable to a state through localstorage
-let editionList = [];
+let editionList: string[] = [];
 
 export function generateTeamsList(id: string) {
-    editionList.push({id: id});
+    editionList.push(id);
+
     if (editionList.length > 0) {
         editionList.sort(() => Math.random() - 0.5);
     }
 
     const teamContainerControl = document.getElementById(id);
-    const listTeamAdded = teamContainerControl?.getElementsByClassName("listTeamAdd")[0] as HTMLButtonElement;
-    const listTeamRemoved= teamContainerControl?.getElementsByClassName("listTeamRemove")[0] as HTMLButtonElement;
+    const listTeamAdded = teamContainerControl?.getElementsByClassName("controlButton")[1] as HTMLButtonElement;
     listTeamAdded.disabled = true;
-    listTeamRemoved.disabled = true;
     // add to database to avoid shithousery
     enableNewEditionButton()
 
@@ -109,31 +115,36 @@ function addGame(gameId: string) {
 
 // }
 
+type TeamParings = {
+    home: string | null;
+    away: string | null;
+}
+
 // function that generates the games table => MAKE IT ASK FOR 'TURNO' AND 'RETURNO', fix function to accomodate single or double round robin
-function genGamesTable(players: any[]) {
-    if (players.length % 2 == 1) {
-        players.push(null);
+function genGamesTable() {
+    if (editionList.length % 2 == 1) {
+        editionList.push(null!);
     }
 
-    const playerCount = players.length;
+    const playerCount = editionList.length;
     const rounds = playerCount - 1;
     const half = playerCount / 2;
 
-    const tournamentPairings: any[] = [];
-    const playerIndexes = players.map((_, i) => i).slice(1);
+    const tournamentPairings: TeamParings[][] = [];
+    const playerIndexes = editionList.map((_, i) => i).slice(1);
 
     for (let round = 0; round < rounds; round++) {
-        const roundPairings: any[] = [];
+        const roundPairings: TeamParings[] = [];
 
-        const newPlayerIndexes: any[] = [0].concat(playerIndexes);
+        const newPlayerIndexes: number[] = [0].concat(playerIndexes);
 
         const firstHalf = newPlayerIndexes.slice(0, half);
         const secondHalf = newPlayerIndexes.slice(half, playerCount).reverse();
 
         for (let i = 0; i < firstHalf.length; i++) {
             roundPairings.push({
-                home: players[firstHalf[i]],
-                away: players[secondHalf[i]],
+                home: editionList[firstHalf[i]],
+                away: editionList[secondHalf[i]],
             });
         }
         // rotating the array
@@ -143,8 +154,7 @@ function genGamesTable(players: any[]) {
     return tournamentPairings;
 }
 
-// generate schedule table
-function createEdition() {
+function renderEditionTitle() {
     // add date to current edition
     const today = new Date();
     const dayOfChamps = today.getFullYear() +"."+(today.getMonth() + 1)+"." +today.getDate();
@@ -158,27 +168,85 @@ function createEdition() {
     champsDate.classList.add("champsDate");
     champsName.innerHTML = "Champs";
     champsDate.innerHTML = dayOfChamps;
-    document.body.appendChild(title);
+    if (showChamps) showChamps.appendChild(title);
     title.appendChild(champsName);
     title.appendChild(champsDate);
+}
+
+function renderGameContainer(gameId: string, roundContainer: HTMLElement, game: TeamParings, gc: number) {
+    let container = document.createElement("div");
+    let gameContainer = document.createElement("div");
+    let homeTeam = document.createElement("span");
+    let scores = document.createElement("form");
+    let homeGoals = document.createElement("input");
+    let awayGoals = document.createElement("input");
+    let awayTeam = document.createElement("span");
+    let x = document.createElement("span");
+    let gameCounter = document.createElement("span");
+    let scoreButton = document.createElement("button");
+
+    container.id = gameId;
+
+    container.classList.add("container");
+    gameContainer.classList.add("gameContainer");
+    homeTeam.classList.add("homeTeam");
+    awayTeam.classList.add("awayTeam");
+    homeGoals.classList.add("homeGoals");
+    awayGoals.classList.add("awayGoals");
+    x.classList.add("x");
+    gameCounter.classList.add("gameCounter");
+    scoreButton.classList.add("scoreButton");
+    scores.classList.add("scores");
+
+    homeTeam.innerHTML = getTeamName(game.home || "");
+    awayTeam.innerHTML = getTeamName(game.away || "");
+    x.innerHTML = " x ";
+    gameCounter.innerHTML = `${gc}`; // print current value of gc
+    scoreButton.innerText = `save`;
+
+    // Add event listener to button only if it and the input form both exists
+    if (scores) scores.onsubmit = formSubmit;
+    if (scoreButton)
+        scoreButton.addEventListener("click", () =>
+            addGame(gameId)
+        );
+
+    scores.appendChild(homeTeam);
+    scores.appendChild(homeGoals);
+    scores.appendChild(x);
+    scores.appendChild(awayGoals);
+    scores.appendChild(awayTeam);
+    scores.appendChild(scoreButton);
+    container.appendChild(gameCounter);
+    gameContainer.appendChild(scores);
+    container.appendChild(gameContainer);
+    roundContainer.appendChild(container);
+
+    return roundContainer;
+}
+
+// generate schedule table
+function createEdition() {
+    // Render edition title
+    renderEditionTitle();
 
     // use the shuffled list to create the games table
-    let games = genGamesTable(editionList);
+    let games = genGamesTable();
+    console.log(games);
+
+    // set a single id for each champs
+    let editionId = uuidv4();
 
     // start the HTML
     const Table = document.createElement("div");
-
-    Table.id = "schedule";
-
+    Table.id = editionId;
     document.body.appendChild(Table);
 
     // 'global' acting as a counter for the games
     let gc = 1;
 
-    // set a single id for each champs
-    const id = uuidv4();
-    let editionId = id;
-
+    // games: TeamParings[][]
+    // round: TeamParings[]
     // generate the items on the page based on each game divided by rounds
     games.forEach((round, index) => {
         let rc = index + 1;
@@ -191,61 +259,15 @@ function createEdition() {
 
         Table.append(roundCounter);
 
-        round.forEach((game: Game) => {
+        round.forEach((game: TeamParings) => {
+            console.log(game);
             if (game.home && game.away) {
                 let gameId = uuidv4();
 
-                let container = document.createElement("div");
-                let gameContainer = document.createElement("div");
-                let homeTeam = document.createElement("span");
-                let scores = document.createElement("form");
-                let homeGoals = document.createElement("input");
-                let awayGoals = document.createElement("input");
-                let awayTeam = document.createElement("span");
-                let x = document.createElement("span");
-                let gameCounter = document.createElement("span");
-                let scoreButton = document.createElement("button");
-
-                container.id = gameId;
-
-                container.classList.add("container");
-                gameContainer.classList.add("gameContainer");
-                homeTeam.classList.add("homeTeam");
-                awayTeam.classList.add("awayTeam");
-                homeGoals.classList.add("homeGoals");
-                awayGoals.classList.add("awayGoals");
-                x.classList.add("x");
-                gameCounter.classList.add("gameCounter");
-                scoreButton.classList.add("scoreButton");
-                scores.classList.add("scores");
-
-                homeTeam.innerHTML = game.home.name;
-                awayTeam.innerHTML = game.away.name;
-                x.innerHTML = " x ";
-                gameCounter.innerHTML = `${gc}`; // print current value of gc
-                scoreButton.innerText = `save`;
-
-                // Add event listener to button only if it and the input form both exists
-                if (scores) scores.onsubmit = formSubmit;
-                if (scoreButton)
-                    scoreButton.addEventListener("click", () =>
-                        addGame(gameId)
-                    );
-
-                scores.appendChild(homeTeam);
-                scores.appendChild(homeGoals);
-                scores.appendChild(x);
-                scores.appendChild(awayGoals);
-                scores.appendChild(awayTeam);
-                scores.appendChild(scoreButton);
-                container.appendChild(gameCounter);
-                gameContainer.appendChild(scores);
-                container.appendChild(gameContainer);
-                roundContainer.appendChild(container);
+                // render game container
+                renderGameContainer(gameId, roundContainer, game, gc);
 
                 let newDB = dbGames();
-                let homeId = game.home.id;
-                let awayId = game.away.id;
 
                 if (newDB) {
                     newDB.push({
@@ -257,13 +279,13 @@ function createEdition() {
                         },
                         teams: {
                             home: {
-                                id: homeId,
+                                id: game.home,
                                 goals: null,
                                 whoScored: null,
                                 whoAssisted: null,
                             },
                             away: {
-                                id: awayId,
+                                id: game.away,
                                 goals: null,
                                 whoScored: null,
                                 whoAssisted: null,

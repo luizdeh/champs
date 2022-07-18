@@ -17,7 +17,7 @@ export const position = {
 export const teamsPalette = {
 AFD: 'AFD',
 ALL: 'ALL',
-DTU: 'DTU'
+DTU: 'DTU',
 }
 
 export const colors = {
@@ -40,17 +40,15 @@ export const colors = {
         [teamsPalette.AFD]: {
             primary: 'darkgreen',
             secondary: 'limegreen'
+        },
+        [teamsPalette.ALL]: {
+            primary: 'pink',
+            secondary: 'brown'
+        },
+        [teamsPalette.DTU]: {
+            primary: 'navyblue',
+            secondary: 'lightblue'
         }
-    },
-    primary: {
-        [teamsPalette.AFD]: 'darkgreen',
-        [teamsPalette.ALL]: 'pink',
-        [teamsPalette.DTU]: 'navyblue'
-    },
-    secondary: {
-        [teamsPalette.AFD]: 'limegreen',
-        [teamsPalette.ALL]: 'brown',
-        [teamsPalette.DTU]: 'lightblue'
     }
 }
 // criar paleta de cores,
