@@ -45,6 +45,7 @@ export type EditionList = {
 // export type currentState = {
 //     id: 
 // }
+// example: save current editionlist and wipe when edition is created
 
 const TeamsDB = "teams";
 const PlayersDB = "players";
@@ -72,15 +73,22 @@ export function saveGame(content: Game) {
 export function formSubmit(event: SubmitEvent) {
     event.preventDefault();
 }
+export function emptyMessage(div: HTMLElement) {
 
-const navButtons = document.querySelectorAll('.navButton')
+    const emptyMessage = document.createElement("p");
+    emptyMessage.innerText = `There are currently NO TEAMS registered!`;
+    div.appendChild(emptyMessage);
+}
+
+const navButtons = document.querySelectorAll('.navButton') 
 const showStuff = document.querySelectorAll('.showstuff')
 
-const getStuff = (navButton: HTMLButtonElement) => navButton.dataset.showstuff
+const getStuff = (navButton: HTMLElement) => navButton.dataset.showstuff
 
-const hide = (element: HTMLDivElement) => element.classList.add('hidden')
+const hide = (element: HTMLElement) => element.classList.add('hidden')
 
 for (let i = 0; i < navButtons.length; i++) {
+
     navButtons[i].addEventListener('click', () => {
         let change = 0
         while (change < navButtons.length) {
@@ -95,7 +103,7 @@ for (let i = 0; i < navButtons.length; i++) {
 
 const dash = document.getElementById('showDash')
 
-dash.innerHTML =
+if (dash) dash.innerHTML =
 `
 criar mercado para proposição de trocas<br>
 revisar criação de campeonato visando montar tabelas que não se perdem no refresh

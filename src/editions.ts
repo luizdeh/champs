@@ -18,6 +18,12 @@ newEdition.appendChild(newEditionButton);
 newEditionButton.disabled = true
 
 // enable/disable the button to create new editions
+// make this button a floating disabled thing at the bottom of the page
+// when it becomes enabled, add the list to saveState and generate the games table, but don't render it yet
+// make another function to render the games table and make it collapsible
+// make sure nothing else happens when an edition is created and is active ( create active and inactive state of editions )
+// create a 'pause edition' function that will disable the edition and make it inactive
+// make sure no teams can transfer players and no players or team can be deleted, but teams/players can be created
 export function enableNewEditionButton() {
     // reference editionlist instead of dbteams
     if (dbTeams().length >= 3) {
@@ -41,10 +47,8 @@ export function generateTeamsList(id: string) {
     }
 
     const teamContainerControl = document.getElementById(id);
-    const listTeamAdded = teamContainerControl?.getElementsByClassName("listTeamAdd")[0] as HTMLButtonElement;
-    const listTeamRemoved= teamContainerControl?.getElementsByClassName("listTeamRemove")[0] as HTMLButtonElement;
+    const listTeamAdded = teamContainerControl?.getElementsByClassName("controlButton")[1] as HTMLButtonElement;
     listTeamAdded.disabled = true;
-    listTeamRemoved.disabled = true;
     // add to database to avoid shithousery
     enableNewEditionButton()
 
@@ -164,7 +168,7 @@ function renderEditionTitle() {
     champsDate.classList.add("champsDate");
     champsName.innerHTML = "Champs";
     champsDate.innerHTML = dayOfChamps;
-    document.body.appendChild(title);
+    if (showChamps) showChamps.appendChild(title);
     title.appendChild(champsName);
     title.appendChild(champsDate);
 }
