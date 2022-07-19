@@ -8,24 +8,24 @@
     </head>
     <body>
         <div id="nav" class="nav">
-            <div class="navButton" data-showstuff="showDash" id="navDash">clear</div>
-            <div class="navButton" data-showstuff="showTeams" id="navTeams">TEAMS</div>
-            <div class="navButton" data-showstuff="showPlayers" id="navPlayers">PLAYERS</div>
-            <div class="navButton" data-showstuff="showMarket" id="navMarket">MARKET</div>
-            <div class="navButton" data-showstuff="showChamps" id="navChamps">CHAMPS</div>
+            <a href="#" class="navButton" data-pageName="dash" id="navDash">clear</a>
+            <a href="#" class="navButton" data-pageName="teams" id="navTeams">TEAMS</a>
+            <a href="#" class="navButton" data-pageName="players" id="navPlayers">PLAYERS</a>
+            <a href="#" class="navButton" data-pageName="market" id="navMarket">MARKET</a>
+            <a href="#" class="navButton" data-pageName="champs" id="navChamps">CHAMPS</a>
         </div>
         <div id="displayInfo">
-            <div class="showstuff" id="showDash"></div>
-            <div class="showstuff hidden" id="showTeams"></div>
-            <div class="showstuff hidden" id="showPlayers"></div>
-            <div class="showstuff hidden" id="showMarket"></div>
-            <div class="showstuff hidden" id="showChamps"></div>
+            <div class="page" id="dash"></div>
+            <div class="page hidden" id="teams"></div>
+            <div class="page hidden" id="players"></div>
+            <div class="page hidden" id="market"></div>
+            <div class="page hidden" id="champs"></div>
         </div>
         <!-- <div id="champs" /> -->
         <script type="module" src="app.ts"></script>
         <script type="module" src="teams.ts"></script>
         <script type="module" src="players.ts"></script>
         <script type="module" src="editions.ts"></script>
-        <script type="module" src="market.ts"></script>
+        <!-- <script type="module" src="market.ts"></script> -->
     </body>
 </html>

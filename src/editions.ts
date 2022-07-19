@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Game, dbTeams, dbGames, saveGame, formSubmit,  } from "./app";
 import {getTeamName} from "./teams";
 
-const showChamps = document.getElementById('showChamps')
+const champs = document.getElementById('champs')
 
 // add the button element to create new editions
 const newEdition = document.createElement("div");
@@ -13,17 +13,16 @@ const newEditionButton = document.createElement("button");
 newEditionButton.classList.add("newEditionButton");
 newEditionButton.innerHTML = "create new champs edition";
 
-if (showChamps) showChamps.appendChild(newEdition);
+if (champs) champs.appendChild(newEdition);
 newEdition.appendChild(newEditionButton);
 newEditionButton.disabled = true
-
-// enable/disable the button to create new editions
-// make this button a floating disabled thing at the bottom of the page
-// when it becomes enabled, add the list to saveState and generate the games table, but don't render it yet
-// make another function to render the games table and make it collapsible
-// make sure nothing else happens when an edition is created and is active ( create active and inactive state of editions )
-// create a 'pause edition' function that will disable the edition and make it inactive
-// make sure no teams can transfer players and no players or team can be deleted, but teams/players can be created
+// TODO enable/disable the button to create new editions
+// TODO make this button a floating disabled thing at the bottom of the page
+// TODO when it becomes enabled, add the list to saveState and generate the games table, but don't render it yet
+// TODO make another function to render the games table and make it collapsible
+// TODO make sure nothing else happens when an edition is created and is active ( create active and inactive state of editions )
+// TODO create a 'pause edition' function that will disable the edition and make it inactive
+// TODO make sure no teams can transfer players and no players or team can be deleted, but teams/players can be created
 export function enableNewEditionButton() {
     // reference editionlist instead of dbteams
     if (dbTeams().length >= 3) {
@@ -115,7 +114,7 @@ function addGame(gameId: string) {
 
 // }
 
-type TeamParings = {
+type TeamPairings = {
     home: string | null;
     away: string | null;
 }
@@ -130,11 +129,11 @@ function genGamesTable() {
     const rounds = playerCount - 1;
     const half = playerCount / 2;
 
-    const tournamentPairings: TeamParings[][] = [];
+    const tournamentPairings: TeamPairings[][] = [];
     const playerIndexes = editionList.map((_, i) => i).slice(1);
 
     for (let round = 0; round < rounds; round++) {
-        const roundPairings: TeamParings[] = [];
+        const roundPairings: TeamPairings[] = [];
 
         const newPlayerIndexes: number[] = [0].concat(playerIndexes);
 
@@ -168,12 +167,12 @@ function renderEditionTitle() {
     champsDate.classList.add("champsDate");
     champsName.innerHTML = "Champs";
     champsDate.innerHTML = dayOfChamps;
-    if (showChamps) showChamps.appendChild(title);
+    if (champs) champs.appendChild(title);
     title.appendChild(champsName);
     title.appendChild(champsDate);
 }
 
-function renderGameContainer(gameId: string, roundContainer: HTMLElement, game: TeamParings, gc: number) {
+function renderGameContainer(gameId: string, roundContainer: HTMLElement, game: TeamPairings, gc: number) {
     let container = document.createElement("div");
     let gameContainer = document.createElement("div");
     let homeTeam = document.createElement("span");
@@ -245,8 +244,8 @@ function createEdition() {
     // 'global' acting as a counter for the games
     let gc = 1;
 
-    // games: TeamParings[][]
-    // round: TeamParings[]
+    // games: TeamPairings[][]
+    // round: TeamPairings[]
     // generate the items on the page based on each game divided by rounds
     games.forEach((round, index) => {
         let rc = index + 1;
@@ -259,7 +258,7 @@ function createEdition() {
 
         Table.append(roundCounter);
 
-        round.forEach((game: TeamParings) => {
+        round.forEach((game: TeamPairings) => {
             console.log(game);
             if (game.home && game.away) {
                 let gameId = uuidv4();

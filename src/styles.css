@@ -23,6 +23,7 @@ body {
     font-weight:bold;
     /* margin: 10px; */
     text-align:center;
+    text-decoration: none;
 }
 .navActive {
     color: white;
@@ -379,17 +380,15 @@ body {
 }
 
 .closeModal {
+    position: absolute;
+    top: 4;
+    right: 10;
     color:grey;
-    float:right;
     font-size: 36px;
     font-weight:bold;
+    text-decoration: none;
 }
-.closeModal:hover,
-.closeModal:focus{
-    color: black;
-    text-decoration:none;
-    cursor:pointer;
-}
+
 .modalContent {
     overflow:auto;
     background-color: #fefefe;
@@ -397,5 +396,6 @@ body {
     padding: 20px;
     border: 1px solid #888;
     width: 25%;
+    position: relative;
 }
 

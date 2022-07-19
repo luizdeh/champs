@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { Player, Team, Game, dbPlayers, dbTeams, dbGames, saveGame, formSubmit } from "./app";
 
-const showMarket = document.getElementById('showMarket')
+const market = document.getElementById('market')
 const teamsMarket = document.createElement('div')
 const openMarket = document.createElement('ul')
 
@@ -21,55 +21,55 @@ for (const team of teams) {
     openMarketTeam.id = team.id
     openMarketTeam.classList.add('openMarketTeam')
     openMarket.appendChild(openMarketTeam)
-    openMarketTeam.addEventListener('click', () => getTeamRoster(team.id))
+    // openMarketTeam.addEventListener('click', () => getTeamRoster(team.id))
 }
 
 teamsMarket.appendChild(openMarket)
-showMarket.appendChild(teamsMarket)
+market?.appendChild(teamsMarket)
 
 const teamShowcase = document.createElement('div')
 teamShowcase.classList.add('teamShowcase')
 teamShowcase.id = 'teamShowcase'
 teamShowcase.innerHTML = `ROSTER`
-showMarket.appendChild(teamShowcase)
+market?.appendChild(teamShowcase)
 
-function getTeamRoster(id: Player) {
+// function getTeamRoster(id: string) {
 
-    const teams = teamsMarket.querySelectorAll('.openMarketTeam')
+//     const teams = teamsMarket.querySelectorAll('.openMarketTeam')
 
-    teams.forEach((team) => {
-        if (team.id === id) {
-            team.style.backgroundColor = 'green'
-        } else {
-            team.style.backgroundColor = 'white'
-        }
-    })
+//     teams.forEach((team: Element) => {
+//         if (team.id === id) {
+//             team.style.backgroundColor = 'green'
+//         } else {
+//             team.style.backgroundColor = 'white'
+//         }
+//     })
 
-    const roster = dbPlayers().filter((teamId: Player) => teamId === id)
+//     const roster = dbPlayers().filter((teamId: Player) => teamId === id)
 
-    for (const player of roster) {
-        const playerListing = document.createElement('li')
-        if (!roster) playerListing.innerHTML = 'nothing to show'
-        playerListing.innerHTML = `${player.position} | ${player.name}`
-        teamShowcase.appendChild(playerListing)
-    }
-}
+//     for (const player of roster) {
+//         const playerListing = document.createElement('li')
+//         if (!roster) playerListing.innerHTML = 'nothing to show'
+//         playerListing.innerHTML = `${player.position} | ${player.name}`
+//         teamShowcase.appendChild(playerListing)
+//     }
+// }
 
 
 
 // const dropdownTeams = document.createElement('div')
-// const dropdownShowTeams = document.createElement('button')
+// const dropdownteams = document.createElement('button')
 
 // dropdownTeams.classList.add('dropdownTeams')
-// dropdownShowTeams.classList.add('dropdownShowTeams')
+// dropdownteams.classList.add('dropdownteams')
 
 // dropdownTeams.id = 'dropdownList'
-// dropdownShowTeams.id = 'dropdownShowTeams'
+// dropdownteams.id = 'dropdownteams'
 
-// dropdownShowTeams.setAttribute('value', 'Submit')
-// dropdownShowTeams.innerText = `SELECT TEAM`
+// dropdownteams.setAttribute('value', 'Submit')
+// dropdownteams.innerText = `SELECT TEAM`
 
-// if (dropdownShowTeams) dropdownShowTeams.addEventListener('click', () => toggleDropdownTeams())
+// if (dropdownteams) dropdownteams.addEventListener('click', () => toggleDropdownTeams())
 
 // function toggleDropdownTeams() {
 
@@ -95,5 +95,5 @@ function getTeamRoster(id: Player) {
 //     dropdownTeams.appendChild(label).appendChild(teamSelect)
 // }
 
-// dropdownTeams.appendChild(dropdownShowTeams)
-// showMarket.appendChild(dropdownTeams)
+// dropdownTeams.appendChild(dropdownteams)
+// market.appendChild(dropdownTeams)
