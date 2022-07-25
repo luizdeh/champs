@@ -2,8 +2,6 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   dbPlayers,
   Player,
-  dbGames,
-  Game,
   dbTeams,
   Team,
   saveTeam,
@@ -78,8 +76,8 @@ function renderTeamContainer(id: string) {
   teamName.classList.add('teamName');
   teamAbbr.classList.add('teamAbbr');
 
-  teamName.innerHTML = `${teamObject[0].name}`;
-  teamAbbr.innerHTML = `${teamObject[0].abbr}`;
+  teamName.innerHTML = `${teamObject[0].name.toUpperCase()}`;
+  teamAbbr.innerHTML = `${teamObject[0].abbr.toUpperCase()}`;
 
   let colorsExists = Object.values(teamsPalette).includes(teamObject[0].abbr);
   if (colorsExists) {
@@ -98,22 +96,23 @@ function renderTeamContainer(id: string) {
 
 function renderTeamControl(id: string) {
   const teamControl = document.createElement('div');
-  const listTeamRemove = document.createElement('button');
-  const listTeamAdd = document.createElement('button');
+  const teamRemove = document.createElement('button');
+  const teamAddToEdition = document.createElement('button');
 
   teamControl.classList.add('teamControl');
-  listTeamRemove.classList.add('controlButton');
-  listTeamAdd.classList.add('controlButton');
+  teamRemove.classList.add('controlButton');
+  teamAddToEdition.classList.add('controlButton');
 
-  listTeamRemove.innerText = `[ remove ]`;
-  listTeamAdd.innerText = `[ add to next edition ]`;
+  // teamRemove.innerHTML = `  `;
+  teamRemove.innerText = `[ remove ]`;
+  teamAddToEdition.innerText = `[ add to next edition ]`;
 
-  teamControl.appendChild(listTeamRemove);
-  teamControl.appendChild(listTeamAdd);
+  teamControl.appendChild(teamRemove);
+  teamControl.appendChild(teamAddToEdition);
 
-  if (checkRoster(id)) listTeamRemove.disabled = true;
-  if (listTeamRemove) listTeamRemove.onclick = () => removeTeam(id);
-  if (listTeamAdd) listTeamAdd.onclick = () => generateTeamsList(id);
+  if (checkRoster(id)) teamRemove.disabled = true;
+  if (teamRemove) teamRemove.onclick = () => removeTeam(id);
+  if (teamAddToEdition) teamAddToEdition.onclick = () => generateTeamsList(id);
 
   return teamControl;
 }
@@ -122,13 +121,11 @@ function renderTeamControl(id: string) {
 function renderTeamRoster(id: string) {
   const roster = getRoster(id);
 
-  console.log(roster)
-
   const teamRoster = document.createElement('div');
   teamRoster.classList.add('teamRoster');
   teamRoster.dataset.id = id;
   teamRoster.classList.add('hidden');
-  
+
   roster.forEach((player: Player) => {
     const rosterPlayerContainer = document.createElement('div');
     const rosterPlayerName = document.createElement('div');
@@ -151,18 +148,23 @@ function renderTeamRoster(id: string) {
   return teamRoster;
 }
 
-function getRoster(id: string) {
-    const teamId = id;
-    const roster = dbPlayers().filter((player: Player) => player.teamId === teamId);
+export function getRoster(id: string) {
+  const teamId = id;
+  const roster = dbPlayers().filter(
+    (player: Player) => player.teamId === teamId,
+  );
 
-    roster.sort((a,b) => { return b.positionIndex - a.positionIndex });
+  roster.sort((a, b) => {
+    return b.positionIndex - a.positionIndex;
+  });
 
-    return roster;
-
+  return roster;
 }
 
 function toggleTeamRoster(id: string) {
   const teamRoster = document.querySelector(`.teamRoster[data-id="${id}"]`);
+  const teamContainer = document.getElementById(id);
+  // const teamName = teamContainer.getElementsByClassName('teamContainer')[0] as HTMLElement;
 
   if (teamRoster) {
     if (teamRoster.classList.contains('hidden')) {
@@ -170,8 +172,17 @@ function toggleTeamRoster(id: string) {
     } else {
       teamRoster.classList.add('hidden');
     }
+
+  if (teamRoster) {
+    if (!teamRoster.classList.contains('hidden')) {
+        teamContainer?.classList.add('showingTeamRoster')
+    } else {
+        teamContainer?.classList.remove('showingTeamRoster')
+    }
   }
 }
+}
+
 function populateTeamsList() {
   const teams = dbTeams();
   teams.sort((a: Team, b: Team) => a.name.localeCompare(b.name));
@@ -194,19 +205,19 @@ function populateTeamsList() {
 }
 
 export function getTeamName(id: string) {
-  return dbTeams()
-    .filter((team: Team) => team.id === id)
-    .map((name: Team) => name.name)[0];
+    return dbTeams()
+        .filter((team: Team) => team.id === id)
+        .map((name: Team) => name.name)[0];
 }
 export function getTeamAbbr(id: string) {
-  return dbTeams()
-    .filter((team: Team) => team.id === id)
-    .map((name: Team) => name.abbr)[0];
+    return dbTeams()
+        .filter((team: Team) => team.id === id)
+        .map((name: Team) => name.abbr)[0];
 }
 
 //list team
 export function listTeams() {
-  if (teamsList) teamsList.innerHTML = '';
+  teamsList.innerHTML = '';
 
   const empty = () => dbTeams().length === 0 || undefined;
 
