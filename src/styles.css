@@ -285,7 +285,7 @@ body {
 }
 
 .container {
-    display:flex;
+    display:block;
     align-items:center;
 }
 
@@ -441,21 +441,45 @@ body {
     background:whitesmoke;
     color:grey;
 }
+.toggleEditionList {
+    color: grey;
+    background: #eeeeee;
+    margin-bottom: 5px;
+    border: none;
+    text-align:center;
+    padding: 10px;
+    width:100%;
+    font-size:1.6em;
+}
+.toggleEditionList:hover {
+    cursor:pointer;
+}
 .listOfEditions {
     display:flex;
-    flex-direction:row;
+    flex-wrap: wrap;
+    width: 100%;
     align-items:center;
-    justify-content:space-evenly;
-    width:100%;
-    margin-top:10px;
-    padding:10px;
+    /* display:flex; */
+    /* flex-direction:row; */
+    /* align-items:center; */
+    /* justify-content:space-evenly; */
+    /* width:100%; */
+    /* margin-top:10px; */
+    /* padding:10px; */
 }
 .editionButton {
-    border: 0px;
-    background: transparent;
-    color: grey;
-    font-size: 14px;
-    padding:10px;
+    flex:1 0 20%;
+    height:45px;
+    width:0;
+    border-radius: 8px;
+    border: none;
+    margin: 5px;
+    background-color:#eeeeee;
+    color:grey;
+    font-weight:bold;
+    font-size:.9em;
+    align-items:center;
+    justify-content:space-between;
 }
 .editionButton:hover {
     background: grey;
@@ -578,4 +602,18 @@ select {
 .playerFilterClear:hover .tooltip {
     visibility: visible;
     opacity: 1;
+}
+
+.gameContainerRosters {
+    display: flex;
+    flex-direction:row;
+    background: #eeeeee;
+}
+.gameContainerHomeRoster,
+.gameContainerAwayRoster {
+    clear:left;
+    flex:1;
+    font-size:.8em;
+    margin: 5px;
+    padding:5px;
 }
