@@ -8,8 +8,9 @@ import {
   formSubmit,
   emptyMessage,
 } from './app';
-import { generateTeamsList, enableNewEditionButton } from './editions';
+import { generateTeamsList, toggleNewEditionButton } from './editions';
 import { colors, teamsPalette } from './appConfig';
+
 
 const teams = document.getElementById('teams');
 
@@ -60,10 +61,9 @@ if (teams) teams.appendChild(teamForm);
 if (teams) teams.appendChild(teamsList);
 
 if (teamForm) teamForm.onsubmit = formSubmit;
-if (teamInput && teamSubmit)
-  teamSubmit.addEventListener('click', () =>
-    addTeam(teamInput.value, abbrInput.value),
-  );
+if (teamInput && teamSubmit) teamSubmit.addEventListener('click', () => addTeam(teamInput.value, abbrInput.value));
+
+listTeams()
 
 function renderTeamContainer(id: string) {
   const teamObject = dbTeams().filter((team: Team) => team.id === id);
@@ -136,8 +136,7 @@ function renderTeamRoster(id: string) {
     rosterPlayerName.classList.add('rosterPlayerName');
 
     rosterPlayerPosition.innerHTML = `${player.position}`;
-    rosterPlayerPosition.style.backgroundColor =
-      colors.playerPosition[player.position];
+    rosterPlayerPosition.style.backgroundColor = colors.playerPosition[player.position];
 
     rosterPlayerName.innerHTML = `${player.name.toUpperCase()}`;
 
@@ -217,19 +216,20 @@ export function getTeamAbbr(id: string) {
 
 //list team
 export function listTeams() {
-  teamsList.innerHTML = '';
 
-  const empty = () => dbTeams().length === 0 || undefined;
+    if (teamsList) teamsList.innerHTML = '';
 
-  if (teamsList && empty()) {
-    emptyMessage(teamsList);
-  }
+    const empty = () => dbTeams().length === 0 || undefined;
 
-  if (teamsList && !empty()) {
-    populateTeamsList();
-    findDuplicateTeams();
-  }
-  enableNewEditionButton();
+    if (teamsList && empty()) {
+        emptyMessage(teamsList);
+    }
+
+    if (teamsList && !empty()) {
+        populateTeamsList();
+        findDuplicateTeams();
+    }
+    toggleNewEditionButton();
 }
 
 function findDuplicateTeams() {
@@ -294,5 +294,3 @@ function checkRoster(id: string) {
     return false;
   }
 }
-
-listTeams();

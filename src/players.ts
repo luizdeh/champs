@@ -8,7 +8,7 @@ import {
   formSubmit,
   emptyMessage,
 } from './app';
-import { listTeams, getTeamName, getTeamAbbr } from './teams';
+import { listTeams, getTeamAbbr } from './teams';
 import { position, positionIndex, colors, teamsPalette } from './appConfig';
 
 const players = document.getElementById('players');
@@ -116,8 +116,6 @@ dbTeams().forEach((team: Team) => {
     playerFilterTeam.value = `${team.abbr}`
     playerFilterTeamSelect.appendChild(playerFilterTeam)
 })
-
-
 
 playerFilter.appendChild(playerFilterPositionSelect)
 playerFilter.appendChild(playerFilterTeamSelect)

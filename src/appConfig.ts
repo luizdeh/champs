@@ -13,6 +13,7 @@ export const position = {
     SA: "SA",
     CA: "CA",
 };
+
 export const positionIndex = {
     positionIndex: {
         [position.GO]: 0,
