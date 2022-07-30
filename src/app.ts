@@ -58,6 +58,12 @@ export type TeamPairings = {
   away: string | null;
 }
 
+export type WhoScored = {
+    gameId: string;
+    field: string;
+    who: string;
+    goalsScored: number;
+}
 // export type currentState = {
 //     id:
 // }
@@ -68,17 +74,19 @@ const PlayersDB = 'players';
 const GamesDB = 'games';
 const EditionListDB = 'teamsListForEdition';
 const EditionsDB = 'editions';
+const WhoScoredDB = 'whoScored'
 
 export const dbTeams = () => JSON.parse(localStorage.getItem(TeamsDB) || '[]');
 
-export const dbPlayers = () =>
-  JSON.parse(localStorage.getItem(PlayersDB) || '[]');
+export const dbPlayers = () => JSON.parse(localStorage.getItem(PlayersDB) || '[]');
 
 export const dbGames = () => JSON.parse(localStorage.getItem(GamesDB) || '[]');
 
 export const dbEditionList = () => JSON.parse(localStorage.getItem(EditionListDB) || '[]');
 
 export const dbEditions = () => JSON.parse(localStorage.getItem(EditionsDB) || '[]');
+
+export const dbWhoScored = () => JSON.parse(localStorage.getItem(WhoScoredDB) || '[]')
 
 export function saveTeam(content: Team) {
   return localStorage.setItem(TeamsDB, JSON.stringify(content));
@@ -98,6 +106,9 @@ export function saveEditionList(content: string[]) {
 
 export function saveEdition(content: Edition) {
   return localStorage.setItem(EditionsDB, JSON.stringify(content));
+}
+export function saveWhoScored(content: WhoScored) {
+    return localStorage.setItem(WhoScoredDB, JSON.stringify(content))
 }
 
 export function formSubmit(event: SubmitEvent) {

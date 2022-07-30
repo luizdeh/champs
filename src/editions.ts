@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
-import { formSubmit, Game, dbGames, saveGame, saveEditionList, saveEdition, dbEditions, Player, dbPlayers, Edition, TeamPairings } from './app';
+import { formSubmit, Game, dbGames, saveGame, saveEditionList, saveEdition, dbEditions, Player, dbPlayers, Edition, TeamPairings, WhoScored, dbWhoScored, saveWhoScored } from './app';
 import { listTeams, getTeamName, getRoster } from './teams';
+import { positionIndex } from "./appConfig"
 
 // TODO when editionList is ready, add the list to saveState and generate the games table, but don't render it yet
 // TODO make sure nothing else happens when an edition is created and is active ( create active and inactive state of editions )
@@ -74,7 +75,7 @@ function populateGamesDB(id: string) {
 
         if (newDB) {
           newDB.push({
-            id: gameId,
+                id: gameId,
             edition: {
               id: editionId,
               round: rc,
@@ -202,32 +203,32 @@ function findEditionName(id: string) {
 
 // function to find the roster of the home team
 function findHomeRoster(id: string) {
-    let game = dbGames().filter((game: Game) => game.id === id);
-    let team = game[0].teams.home.id;
-    let gameEditionId = game[0].edition.id;
-    let gameEdition = dbEditions().filter((edition: Edition) => edition.id === gameEditionId);
-    let roster = [];
-    gameEdition[0].editionTeams.forEach((item: any) => {
+    let game = dbGames().find((game: Game) => game.id === id);
+    let team = game.teams.home.id;
+    let gameEditionId = game.edition.id;
+    let gameEdition = dbEditions().find((edition: Edition) => edition.id === gameEditionId);
+    let roster: any[] = [];
+    gameEdition.editionTeams.forEach((item: any) => {
     if (item.teamId === team) {
-        roster = item.roster;
-    }
-  });
-    return roster;
+				roster = item.roster;
+			}
+		});
+		return roster
 }
 
 // function to find the roster of the away team
 function findAwayRoster(id: string) {
-  let game = dbGames().filter((game: Game) => game.id === id);
-  let team = game[0].teams.away.id;
-  let gameEditionId = game[0].edition.id;
-  let gameEdition = dbEditions().filter((edition: Edition) => edition.id === gameEditionId);
-  let roster = [];
-  gameEdition[0].editionTeams.forEach((item: any) => {
+  let game = dbGames().find((game: Game) => game.id === id);
+  let team = game.teams.away.id;
+  let gameEditionId = game.edition.id;
+  let gameEdition = dbEditions().find((edition: Edition) => edition.id === gameEditionId);
+  let roster: any[] = [];
+  gameEdition.editionTeams.forEach((item: any) => {
     if (item.teamId === team) {
       roster = item.roster;
     }
   });
-  return roster;
+  return roster
 }
 // function to find player's name using his ID
 function getPlayerName(id: string) {
@@ -275,9 +276,6 @@ function renderGameContainer(gameId: string, game: Game) {
   x.innerHTML = ' x ';
   gameCounter.innerHTML = `Round ${game.edition.round} | Game ${game.edition.game}`; // print current value of gc
   scoreButton.innerText = `save`;
-
-  homeGoals.disabled = true;
-  awayGoals.disabled = true;
 
   // Add event listener to button only if it and the input form both exists
   if (scores) scores.onsubmit = formSubmit;
@@ -338,11 +336,13 @@ function toggleTeamRoster(id: string) {
   }
 }
 
-
 // function to render the rosters of the teams in a game container
 function renderGameRoster(id: string) {
   const home = findHomeRoster(id);
   const away = findAwayRoster(id);
+
+	home.sort((a, b) => b.posIndex - a.posIndex)
+	away.sort((a, b) => b.posIndex - a.posIndex)
 
   const container = document.getElementById(id);
   const gameRosters = container?.getElementsByClassName('gameContainerRosters')[0];
@@ -352,84 +352,165 @@ function renderGameRoster(id: string) {
   const homeGoals = container?.getElementsByClassName('gameContainerHomeGoals')[0] as HTMLInputElement;
   const awayGoals = container?.getElementsByClassName('gameContainerAwayGoals')[0] as HTMLInputElement;
 
-  if (gameComplete(id)) {
-    if (homeTeamRoster) homeTeamRoster.innerHTML = '';
-    if (awayTeamRoster) awayTeamRoster.innerHTML = '';
-  } else {
-    home.forEach((player: any) => {
-      let playerName = getPlayerName(player.id);
-      let playerId = player.id;
-      let playerElement = document.createElement('div');
-      playerElement.classList.add('playerElement');
-      playerElement.dataset.id = playerId;
+  let homeScore = 0
 
-      const playerNameHome = document.createElement('span');
-      playerNameHome.innerHTML = playerName.toUpperCase();
-      playerNameHome.classList.add('playerNameHome');
+	let orderedListOfPlayers = document.createElement('ol')
 
-      const addGoal = document.createElement('button');
-      const removeGoal = document.createElement('button');
-      const goals = document.createElement('span');
-      addGoal.innerText = '+';
-      removeGoal.innerText = '-';
-      goals.innerText = `0`;
-      addGoal.classList.add('addRemoveGoal');
-      removeGoal.classList.add('addRemoveGoal');
-      goals.classList.add('goals');
+	const renderSelectOptions = (id: string, name: string, position: string) => {
+		const playerSelectOption = document.createElement('option');
+		playerSelectOption.value = id
+		playerSelectOption.innerText = `${position.toUpperCase()}  .  ${name.toUpperCase()}`;
+		return playerSelectOption;
+	}
+
+	const emptyPlayerSelection = document.createElement('option')
+	emptyPlayerSelection.innerText = `select player`
+	emptyPlayerSelection.value = ``
+	emptyPlayerSelection.selected = true
+	emptyPlayerSelection.disabled = true
+
+  const renderPlayer = () => {
+
+    const playerGoalSelectionId = uuidv4()
+    const playerAssistSelectionId = uuidv4()
+  
+    const listNumbers = document.createElement('li');
+    listNumbers.classList.add('listNumbers');
     
-      addGoal.onclick = () => {
-        goals.innerText = `${parseInt(goals.innerText) + 1}`;
-        homeGoals.value = goals.innerText;
-      };
-      removeGoal.onclick = () => {
-        goals.innerText = `${parseInt(goals.innerText) - 1}`;
-        homeGoals.value = goals.innerText;
-      };
+    let playerGoal = document.createElement('select');
+    playerGoal.classList.add('playerStatsSelect');
+    playerGoal.dataset.playerGoalSelect = playerGoalSelectionId
+    playerGoal.appendChild(emptyPlayerSelection)
+        
+    let playerAssist = document.createElement('select');
+    playerAssist.classList.add('playerStatSelect');
+    playerAssist.dataset.playerAssistSelect = playerAssistSelectionId
+		playerAssist.appendChild(emptyPlayerSelection)
+		playerAssist.disabled = true
 
-      playerElement.appendChild(playerNameHome);
-      playerElement.appendChild(removeGoal);
-      playerElement.appendChild(goals);
-      playerElement.appendChild(addGoal);
-      homeTeamRoster?.appendChild(playerElement);
-    });
-    away.forEach((player: any) => {
-      let playerName = getPlayerName(player.id);
-      let playerId = player.id;
-      let playerElement = document.createElement('div');
-      playerElement.classList.add('playerElement');
-      playerElement.dataset.id = playerId;
+    Object.values(home).forEach((player: Player) => {
+			playerGoal.appendChild(renderSelectOptions(player.id, player.name, player.position))
+		})
 
-      const playerNameAway = document.createElement('span');
-      playerNameAway.innerHTML = playerName.toUpperCase();
-      playerNameAway.classList.add('playerNameAway');
+    if (playerGoal) playerGoal.onchange = (e: any) => {
+	
+			const goalScorerId = e.target.value
+			
+			playerAssist.disabled = false
 
-      const addGoal = document.createElement('button');
-      const removeGoal = document.createElement('button');
-      const goals = document.createElement('span');
-      addGoal.innerText = '+';
-      removeGoal.innerText = '-';
-      goals.innerText = `0`;
-      addGoal.classList.add('addRemoveGoal');
-      removeGoal.classList.add('addRemoveGoal');
-      goals.classList.add('goals');
+			Object.values(home).forEach((player: Player) => {
+					if (goalScorerId !== player.id) {
+						playerAssist.appendChild(renderSelectOptions(player.id, player.name, player.position))
+					}
+				})
 
-      addGoal.onclick = () => {
-        goals.innerText = `${parseInt(goals.innerText) + 1}`;
-        awayGoals.value = goals.innerText;
-      };
-      removeGoal.onclick = () => {
-        goals.innerText = `${parseInt(goals.innerText) - 1}`;
-        awayGoals.value = goals.innerText;
-      };
+        // on change do gol e onchange do assist - tentar fazer reutilizável
+        // depois criar um jeito de criar primeiro o input de gol, depois o de assist
+        // Toda vez que ele mudar, renderizar o dropdown de assists novamente
+        // filtrar pelo jogador selecionado (tirar o joga10 selecionado)
 
-      playerElement.appendChild(addGoal);
-      playerElement.appendChild(goals);
-      playerElement.appendChild(removeGoal);
-      playerElement.appendChild(playerNameAway);
-      awayTeamRoster?.appendChild(playerElement);
-    });
+        // Object.values(home).forEach((player: Player) => {
+        // if (player.id !== e.target.value) {
+        //   const playerOptionAssist = document.createElement('option');
+        //   playerOptionAssist.value = player.id
+        //   playerOptionAssist.innerText = `${player.name}`;
+        //   playerAssist.appendChild(playerOptionAssist);
+        // } else {
+        //   const playerOptionAssist = document.createElement('option');
+        //   playerOptionAssist.value = player.id
+        //   playerOptionAssist.innerText = `${player.name}`;
+        //   playerAssist.appendChild(playerOptionAssist);
+        // }
+    }
+  
+    listNumbers?.appendChild(playerGoal)
+    listNumbers?.appendChild(playerAssist)
+    orderedListOfPlayers?.appendChild(listNumbers)
+  }
+  
+  // colocar um listener no onKeyUp para sempre renderizar o conteudo do homeRoster ou away Roster
+  homeGoals.onkeyup = (e: any) => {
+    if (orderedListOfPlayers) orderedListOfPlayers.innerHTML = ''
+
+    homeScore = e.target.value
+    
+    for (let index = 0; index < homeScore; index++) {
+      renderPlayer()
+    }
+
+    homeTeamRoster?.appendChild(orderedListOfPlayers)
   }
 }
+
+
+  // home.forEach((player: any) => {
+  //     let playerName = getPlayerName(player.id);
+  //     let playerId = player.id;
+  //     let field = 'home'
+  //     let playerElement = document.createElement('div');
+  //     playerElement.classList.add('playerElement');
+  //     playerElement.dataset.id = playerId;
+
+  //     const playerNameHome = document.createElement('span');
+  //     playerNameHome.innerHTML = playerName.toUpperCase();
+  //     playerNameHome.classList.add('playerNameHome');
+
+
+  //     playerElement.appendChild(playerNameHome);
+  //     homeTeamRoster?.appendChild(playerElement);
+  //   });
+
+  //   away.forEach((player: any) => {
+  //     let playerName = getPlayerName(player.id);
+  //     let playerId = player.id;
+  //     let field = 'away'
+  //     let playerElement = document.createElement('div');
+  //     playerElement.classList.add('playerElement');
+  //     playerElement.dataset.id = playerId;
+
+  //     const playerNameAway = document.createElement('span');
+  //     playerNameAway.innerHTML = playerName.toUpperCase();
+  //     playerNameAway.classList.add('playerNameAway');
+
+  //     playerElement.appendChild(playerNameAway);
+  //     awayTeamRoster?.appendChild(playerElement);
+  //   });
+  //}
+
+function getGoal(id: string,field: string) {
+    const game = dbWhoScored().filter((item: WhoScored) => item.gameId === id)
+    const where = game.filter((item: WhoScored) => item.field === field)
+    let sum = 0
+    where.forEach((element: WhoScored) => sum += element.goalsScored)
+    return sum
+} 
+// function to add values to the goals input
+function addGoals(gameId: string, id: any, field: any) {
+    const game = document.getElementById(gameId)
+    const awayInput = game?.getElementsByClassName('gameContainerAwayGoals')[0] as HTMLInputElement
+    const homeInput = game?.getElementsByClassName('gameContainerHomeGoals')[0] as HTMLInputElement
+    const player = document.querySelector(`[data-id="${id}"]`)
+    let awayGoals = awayInput.value
+    let homeGoals = homeInput.value
+    console.log(player)
+    if (field === 'away') {
+        // return dbWhoScored().filter((item: WhoScored) => item.who === id)
+        return awayGoals + 1
+    }
+    if (field === 'home') {
+        return homeGoals + 1
+    }
+}
+
+// function getGoalsFromRosters(id: string) {
+//     const game = document.getElementById(id)
+//     const homeInput = game.getElementsByClassName('gameContainerHomeGoals')[0].value
+//     const awayInput = game.getElementsByClassName('gameContainerAwayGoals')[0].value
+
+//     homeInput + 1
+
+// }
+
 
 // render the edition's title (name and date)
 function renderEditionTitle(id: string) {
@@ -492,13 +573,15 @@ function addGame(gameId: string) {
     newDB[currentGame].teams.home.goals = homeGoal.value;
     newDB[currentGame].teams.away.goals = awayGoal.value;
 
-    newDB[currentGame].teams.home.whoScored = 
-    newDB[currentGame].teams.away.whoScored = 
+    // const homeGoalDude = document.querySelectorAll(`[data-id="${playerId}"]`)
+    // newDB[currentGame].teams.home.whoScored = 
+    // newDB[currentGame].teams.away.whoScored = 
 
     saveGame(newDB);
 
   }
     // whoScored(gameId)
+
     // re-render the edition to let CSS do its thing
     renderEdition(findEditionId(gameId))
 
