@@ -50,7 +50,7 @@ body {
     background:white;
     cursor:pointer;
 }
-.sticky {
+/* .sticky {
     position: fixed;
     top: 7px;
     width: 100%;
@@ -58,7 +58,7 @@ body {
 }
 .sticky + .content {
     padding-top: 60px;
-}
+} */
 .teamsMarket {
     border: 1px solid lightgrey;
 }
@@ -313,35 +313,39 @@ body {
     cursor:pointer;
 }
 
-.roundContainer {
-    display:block;
-    justify-content: stretch;
-    align-items: center;
-    width: 100%;
-    margin-bottom: 5px;
-}
-
-.roundCounter {
-    display:flex;
-    width:52%;
-    justify-content:right;
-    font-size:12px;
-    font-weight:bold;
-    /* margin-left: -100px; */
-}
-
 .container {
     display:block;
     align-items:center;
+    border:1px solid #eeeeee;
+    background-color:#eeeeee;
+    border-radius:10px;
+    margin:.5em;
 }
 
-/* .container:nth-child() */
-
 .gameCounter {
-    flex:1;
-    font-size:8px;
+    flex:0.05;
+    display:flex;
+    flex-direction:column;
     font-weight:bold;
-    /* width:5%; */
+    background: transparent;
+    padding:5px;
+}
+.gameRound {
+    flex:1;
+    color:grey;
+    font-size:.6em;
+    text-align:left;
+    font-weight:bold;
+    /* text-decoration: underline;
+    text-underline-offset: 2px; */
+}
+.gameNumber {
+    flex:1;
+    color:grey;
+    font-size:.75em;
+    text-align:center;
+    font-weight: bold;
+    /* padding:4px; */
 }
 
 .gameContainer {
@@ -349,69 +353,89 @@ body {
     align-items:center;
     background:white;
     padding:5px;
-    border: 2px solid white;
+    /* border: 2px solid lightgrey; */
+    border-radius: 10px;
 }
 
 .scores {
     display:flex;
+    flex:1;
     align-items:center;
-    justify-content:space-between;
-    width:100%;
 }
 
 .homeTeam {
     flex:2;
-    justify-content:left;
     text-align:left;
-    margin-left: 10px;
+    margin-left: 2em;
+    padding:.75em;
 }
 
 .awayTeam {
     flex:2;
-    justify-content:right;
     text-align:right;
-    margin-right: 10px;
+    margin-right: 2em;
+    padding:.75em;
 }
-
-.gameContainerHomeGoals {
+/* .gameContainerHomeGoals {
     flex:0.1;
-    border: 0px;
+    border: none;
     background: #eeeeee;
     text-align:center;
     width: 25px;
     padding: 10px;
     font-weight: bold;
+    font-size: 1.1em;
 
-}
+} */
+.gameContainerHomeGoals,
 .gameContainerAwayGoals {
     flex:0.1;
-    border: 0px;
+    border: none;
     background: #eeeeee;
     text-align:center;
-    width: 25px;
-    padding: 10px;
-    font-weight: bold;
+    width: 1.5em;
+    padding: .5em;
+    /* font-weight: bold; */
+    font-size: 1.1em;
 
 }
 .scoreButton {
     flex:0;
-    margin-right: 10px;
+    margin: 4px;
+    padding: 8px;
+    border: none;
+    font-size:.7em;
+    font-weight:bold;
+    color:grey;
+    border-radius:8px;
+}
+.scoreButton:hover {
+    background: grey;
+    color:white;
+    cursor:pointer;
+}
+.scoreButton:disabled {
+    background: transparent;
+    color:white;
+    cursor:not-allowed;
 }
 .x {
     text-align: center;
     padding:5px;
-    font-size:12px;
+    font-size:.8em;
 }
 
 .title {
     display:flex;
-    font-size:18px;
+    font-size:1.2em;
     font-weight:bold;
     color: #474747;
     align-items:center;
     justify-content:space-evenly;
-    margin-bottom:10px;
-    border-bottom: 1px dotted grey;
+    margin-bottom:2em;
+    background-color: #b8e3f5;
+    padding:.5em;
+    width:100%;
 }
 
 .champsName {
@@ -730,4 +754,137 @@ select {
     font-size:.5em;
     margin: 5px;
     padding:5px;
+}
+.tableContainer {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    width:100%;
+    margin-bottom:2em;
+}
+.listedResult {
+    display:flex;
+    align-items:center;
+    padding:.5em;
+    width:100%;
+    font-size: .8em;
+}
+.listedResult:nth-child(even) {
+    background-color: #f0f9fd;
+}
+.listedResult:nth-child(odd) {
+    background: white;
+}
+.edition-result-index {
+    flex:0.5;
+    text-align:left;
+    font-weight:bold;
+}
+.edition-result-name {
+    flex:3;
+    text-align:left;
+}
+.edition-result-line {
+    flex:1;
+    text-align:center;  
+}
+.editionShown {
+    display:flex;
+    flex-direction:column;
+    width:100%;
+}
+.table {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    width:100%;
+}
+.table-header {
+    display:flex;
+    flex-direction:row;
+    width:100%;
+    font-size:.9em;
+    font-weight:bold;
+    align-items:center;
+    /* border-bottom:1px solid lightgrey; */
+}
+.table-header-name {
+    flex:3.5;
+    text-align:center;
+}
+.table-header-items {
+    flex:1;
+    text-align:center;
+}
+.edition-player-stats-table {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    width:100%;
+}
+.edition-player-stats-header {
+    display:flex;
+    flex-direction:row;
+    width:100%;
+    font-size:.9em;
+    font-weight:bold;
+    align-items:center;
+    /* border-bottom:1px solid lightgrey; */
+}
+.edition-player-stats-header-stat {
+    flex:1;
+    text-align:center;
+    
+}
+.playerStatsContainer {
+    display:flex;
+    flex-direction:row;
+    margin-bottom:2em;
+    /* padding:1em; */
+}
+.goalContainer {
+    display:flex;
+    flex:1;
+    flex-direction:column;
+    align-items:center;
+    width:100%;
+}
+.assistContainer {
+    display:flex;
+    flex:1;
+    flex-direction:column;
+    align-items:center;
+    width:100%;
+}
+.playerStatContainer {
+    flex:1;
+    display:flex;
+    flex-direction:row;
+    align-items:baseline;
+    font-size: .8em;
+    width:100%;
+    padding:.5em;
+}
+.playerStatIndex {
+    flex:1;
+    text-align:center;
+    /* font-weight:bold; */
+}
+.playerStatName {
+    flex:2;
+    text-align:left;
+    /* font-size:1.1em; */
+}
+.playerStatTeam {
+    flex:1;
+    text-align:right;
+}
+.playerStatCount {
+    flex:1;
+    text-align:center;
+    /* font-size:1.2em; */
+}
+.playerStatContainer:nth-child(even) {
+    /* background-color: rgb(228, 253, 236) */
+    background-color: #f0f9fd
 }

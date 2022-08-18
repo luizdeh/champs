@@ -58,12 +58,6 @@ export type TeamPairings = {
   away: string | null;
 }
 
-export type WhoScored = {
-    gameId: string;
-    field: string;
-    who: string;
-    goalsScored: number;
-}
 // export type currentState = {
 //     id:
 // }
@@ -74,7 +68,6 @@ const PlayersDB = 'players';
 const GamesDB = 'games';
 const EditionListDB = 'teamsListForEdition';
 const EditionsDB = 'editions';
-const WhoScoredDB = 'whoScored'
 
 export const dbTeams = () => JSON.parse(localStorage.getItem(TeamsDB) || '[]');
 
@@ -85,8 +78,6 @@ export const dbGames = () => JSON.parse(localStorage.getItem(GamesDB) || '[]');
 export const dbEditionList = () => JSON.parse(localStorage.getItem(EditionListDB) || '[]');
 
 export const dbEditions = () => JSON.parse(localStorage.getItem(EditionsDB) || '[]');
-
-export const dbWhoScored = () => JSON.parse(localStorage.getItem(WhoScoredDB) || '[]')
 
 export function saveTeam(content: Team) {
   return localStorage.setItem(TeamsDB, JSON.stringify(content));
@@ -107,9 +98,6 @@ export function saveEditionList(content: string[]) {
 export function saveEdition(content: Edition) {
   return localStorage.setItem(EditionsDB, JSON.stringify(content));
 }
-export function saveWhoScored(content: WhoScored) {
-    return localStorage.setItem(WhoScoredDB, JSON.stringify(content))
-}
 
 export function formSubmit(event: SubmitEvent) {
   event.preventDefault();
@@ -121,6 +109,29 @@ export function emptyMessage(div: HTMLElement) {
   div.appendChild(emptyMessage);
 }
 
+export type CreateElementType = {
+  tag: string;
+  id?: string;
+  classes?: string;
+}
+
+export function createElement({ tag, id, classes }: CreateElementType) {
+  const element = document.createElement(tag)
+
+  if (classes) element.classList.add(classes);
+  if (id) element.id = id;
+
+  return element
+}
+
+export const hidden = (item: Element) => {
+    if (item.classList.contains('hidden')) {
+        item.classList.remove('hidden')
+    } else {
+        item.classList.add('hidden')
+    }
+}
+
 const navButtons = document.querySelectorAll('.navButton');
 const getPagesQuery = document.querySelectorAll('.page');
 
@@ -130,7 +141,7 @@ const hide = (element: Element) => element.classList.add('hidden');
 
 Object.keys(navButtons).forEach((key) => {
 
-  navButtons[key].addEventListener('click', (e) => {
+  navButtons[key].addEventListener('click', (e: any) => {
     e.preventDefault();
 
     Object.keys(navButtons).forEach((key) => {
@@ -150,19 +161,19 @@ Object.keys(navButtons).forEach((key) => {
   });
 });
 
-window.onscroll = function () { stickyNav() };
+// window.onscroll = function () { stickyNav() };
 
-const nav = document.getElementById('nav') as HTMLElement
+// const nav = document.getElementById('nav') as HTMLElement
 
-let sticky = nav.offsetTop;
+// let sticky = nav.offsetTop;
 
-function stickyNav() {
-  if (window.pageYOffset >= sticky) {
-    nav.classList.add("sticky")
-  } else {
-    nav.classList.remove("sticky");
-  }
-}
+// function stickyNav() {
+//   if (window.pageYOffset >= sticky) {
+//     nav.classList.add("sticky")
+//   } else {
+//     nav.classList.remove("sticky");
+//   }
+// }
 
 const dash = document.getElementById('dash');
 

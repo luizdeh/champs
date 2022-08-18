@@ -7,6 +7,7 @@ import {
   saveTeam,
   formSubmit,
   emptyMessage,
+  createElement
 } from './app';
 import { generateTeamsList, toggleNewEditionButton } from './editions';
 import { colors, teamsPalette } from './appConfig';
@@ -15,23 +16,11 @@ import { colors, teamsPalette } from './appConfig';
 const teams = document.getElementById('teams');
 
 // Set form to add teams
-const teamForm = document.createElement('form');
-const teamInput = document.createElement('input');
-const abbrInput = document.createElement('input');
-const teamSubmit = document.createElement('button');
-const teamsList = document.createElement('div');
-
-teamForm.classList.add('teamForm');
-teamInput.classList.add('teamInput');
-abbrInput.classList.add('teamInput');
-teamSubmit.classList.add('teamSubmit');
-teamsList.classList.add('teamsList');
-
-teamForm.id = 'teamForm';
-teamInput.id = 'teamInput';
-abbrInput.id = 'abbrInput';
-teamSubmit.id = 'teamSubmit';
-teamsList.id = 'teamsList';
+const teamForm = createElement({tag:'form',id:'teamForm',classes:'teamForm'}) as HTMLFormElement
+const teamInput = createElement({tag:'input',id:'teamInput',classes:'teamInput'}) as HTMLInputElement
+const abbrInput = createElement({tag:'input',id:'abbrInput',classes:'teamInput'}) as HTMLInputElement
+const teamSubmit = createElement({tag:'button',id:'teamSubmit',classes:'teamSubmit'}) as HTMLButtonElement
+const teamsList = createElement({tag:'div',id:'teamsList',classes:'teamsList'})
 
 teamForm.setAttribute('method', 'post');
 
@@ -66,24 +55,20 @@ if (teamInput && teamSubmit) teamSubmit.addEventListener('click', () => addTeam(
 listTeams()
 
 function renderTeamContainer(id: string) {
-  const teamObject = dbTeams().filter((team: Team) => team.id === id);
+  const teamObject = dbTeams().find((team: Team) => team.id === id);
 
-  const teamContainer = document.createElement('div');
-  const teamName = document.createElement('p');
-  const teamAbbr = document.createElement('p');
+  const teamContainer = createElement({tag:'div',classes:'teamContainer'})
+  const teamName = createElement({tag:'p',classes:'teamName'})
+  const teamAbbr = createElement({tag:'p',classes:'teamAbbr'})
 
-  teamContainer.classList.add('teamContainer');
-  teamName.classList.add('teamName');
-  teamAbbr.classList.add('teamAbbr');
+  teamName.innerHTML = `${teamObject.name.toUpperCase()}`;
+  teamAbbr.innerHTML = `${teamObject.abbr.toUpperCase()}`;
 
-  teamName.innerHTML = `${teamObject[0].name.toUpperCase()}`;
-  teamAbbr.innerHTML = `${teamObject[0].abbr.toUpperCase()}`;
-
-  let colorsExists = Object.values(teamsPalette).includes(teamObject[0].abbr);
+  let colorsExists = Object.values(teamsPalette).includes(teamObject.abbr);
   if (colorsExists) {
-    teamAbbr.style.color = colors.teamsPalette[teamObject[0].abbr].primary;
+    teamAbbr.style.color = colors.teamsPalette[teamObject.abbr].primary;
     teamAbbr.style.backgroundColor =
-      colors.teamsPalette[teamObject[0].abbr].secondary;
+      colors.teamsPalette[teamObject.abbr].secondary;
   }
 
   teamName.addEventListener('click', () => toggleTeamRoster(id));
@@ -95,15 +80,10 @@ function renderTeamContainer(id: string) {
 }
 
 function renderTeamControl(id: string) {
-  const teamControl = document.createElement('div');
-  const teamRemove = document.createElement('button');
-  const teamAddToEdition = document.createElement('button');
-
-  teamControl.classList.add('teamControl');
-  teamRemove.classList.add('controlButton');
-  teamAddToEdition.classList.add('controlButton');
-
-  // teamRemove.innerHTML = `  `;
+    const teamControl = createElement({tag:'div',classes:'teamControl'})
+    const teamRemove = createElement({tag:'button',classes:'controlButton'}) as HTMLButtonElement
+    const teamAddToEdition = createElement({tag:'button',classes:'controlButton'})
+    
   teamRemove.innerText = `[ remove ]`;
   teamAddToEdition.innerText = `[ add to next edition ]`;
 
@@ -121,19 +101,14 @@ function renderTeamControl(id: string) {
 function renderTeamRoster(id: string) {
   const roster = getRoster(id);
 
-  const teamRoster = document.createElement('div');
-  teamRoster.classList.add('teamRoster');
+  const teamRoster = createElement({tag:'div',classes:'teamRoster'})
   teamRoster.dataset.id = id;
   teamRoster.classList.add('hidden');
 
   roster.forEach((player: Player) => {
-    const rosterPlayerContainer = document.createElement('div');
-    const rosterPlayerName = document.createElement('div');
-    const rosterPlayerPosition = document.createElement('div');
-
-    rosterPlayerContainer.classList.add('rosterPlayerContainer');
-    rosterPlayerPosition.classList.add('rosterPlayerPosition');
-    rosterPlayerName.classList.add('rosterPlayerName');
+    const rosterPlayerContainer = createElement({tag:'div',classes:'rosterPlayerContainer'});
+    const rosterPlayerName = createElement({tag:'div',classes:'rosterPlayerName'});
+    const rosterPlayerPosition = createElement({tag:'div',classes:'rosterPlayerPosition'});
 
     rosterPlayerPosition.innerHTML = `${player.position}`;
     rosterPlayerPosition.style.backgroundColor = colors.playerPosition[player.position];
@@ -179,7 +154,7 @@ function toggleTeamRoster(id: string) {
         teamContainer?.classList.remove('showingTeamRoster')
     }
   }
-}
+  }
 }
 
 function populateTeamsList() {
@@ -193,9 +168,7 @@ function populateTeamsList() {
     let control = renderTeamControl(team.id);
     let roster = renderTeamRoster(team.id);
 
-    const teamContainerControl = document.createElement('div');
-    teamContainerControl.classList.add('teamContainerControl');
-    teamContainerControl.id = team.id;
+    const teamContainerControl = createElement({tag:'div',classes:'teamContainerControl',id:team.id});
     teamContainerControl.appendChild(container);
     teamContainerControl.appendChild(control);
     if (teamsList) teamsList.appendChild(teamContainerControl);

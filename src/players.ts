@@ -544,7 +544,7 @@ function openPlayerModal(id: string) {
 
   teams.forEach((team: Team) => {
     const eachTeam = document.createElement('p');
-    eachTeam.innerHTML = `${team.name}`;
+    eachTeam.innerHTML = `${team.name.toUpperCase()}`;
     eachTeam.id = team.id;
     eachTeam.classList.add('eachTeam');
     playerModal!.appendChild(eachTeam);
