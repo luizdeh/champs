@@ -1,301 +1,881 @@
-import { v4 as uuidv4 } from "uuid";
-import { Game, dbTeams, dbGames, saveGame, formSubmit,  } from "./app";
-import {getTeamName} from "./teams";
+import { v4 as uuidv4 } from 'uuid';
+import {
+  formSubmit,
+  Game,
+  dbGames,
+  saveGame,
+  saveEditionList,
+  saveEdition,
+  dbEditions,
+  Player,
+  Edition,
+  TeamPairings,
+  createElement,
+  dbPlayers,
+} from './app';
+import { listTeams, getTeamName, getRoster } from './teams';
+import { renderEditionResults, renderPlayerStats } from './results'
 
-const champs = document.getElementById('champs')
+const c = console.log.bind(console);
 
-// add the button element to create new editions
-const newEdition = document.createElement("div");
-newEdition.classList.add("newEdition");
-newEdition.id = "newEdition";
-
-const newEditionButton = document.createElement("button");
-newEditionButton.classList.add("newEditionButton");
-newEditionButton.innerHTML = "create new champs edition";
-
-if (champs) champs.appendChild(newEdition);
-newEdition.appendChild(newEditionButton);
-newEditionButton.disabled = true
-// TODO enable/disable the button to create new editions
-// TODO make this button a floating disabled thing at the bottom of the page
-// TODO when it becomes enabled, add the list to saveState and generate the games table, but don't render it yet
-// TODO make another function to render the games table and make it collapsible
 // TODO make sure nothing else happens when an edition is created and is active ( create active and inactive state of editions )
 // TODO create a 'pause edition' function that will disable the edition and make it inactive
 // TODO make sure no teams can transfer players and no players or team can be deleted, but teams/players can be created
-export function enableNewEditionButton() {
-    // reference editionlist instead of dbteams
-    if (dbTeams().length >= 3) {
-        newEditionButton.disabled = false
-        newEditionButton.addEventListener("click", () => createEdition());
-    } else {
-        newEditionButton.disabled = true
-    }
-
-}
+// TODO make sure users can input a drawn game with no goals
 
 // make a randomized list from selected teams
-// transform this variable to a state through localstorage
 let editionList: string[] = [];
 
 export function generateTeamsList(id: string) {
-    editionList.push(id);
+  editionList.push(id);
+  toggleNextEditionButton(id);
+  toggleNewEditionButton();
+  saveEditionList(editionList);
+  return editionList;
+}
 
-    if (editionList.length > 0) {
-        editionList.sort(() => Math.random() - 0.5);
+// function that generates the games table
+function genGamesTable() {
+  editionList.sort(() => Math.random() - 0.5);
+
+  if (editionList.length % 2 == 1) {
+    editionList.push(null!);
+  }
+
+  const playerCount = editionList.length;
+  const rounds = playerCount - 1;
+  const half = playerCount / 2;
+
+  const tournamentPairings: TeamPairings[][] = [];
+  const playerIndexes = editionList.map((_, i) => i).slice(1);
+
+  const checkbox = document.getElementById(
+    'checkboxDoubleRound',
+  ) as HTMLInputElement;
+
+  for (let round = 0; round < rounds; round++) {
+    const roundPairings: TeamPairings[] = [];
+
+    const newPlayerIndexes: number[] = [0].concat(playerIndexes);
+
+    const firstHalf = newPlayerIndexes.slice(0, half);
+    const secondHalf = newPlayerIndexes.slice(half, playerCount).reverse();
+
+    for (let i = 0; i < firstHalf.length; i++) {
+      roundPairings.push({
+        home: editionList[firstHalf[i]],
+        away: editionList[secondHalf[i]],
+      });
     }
+    // rotating the array
+    playerIndexes.push(playerIndexes.shift()!);
+    tournamentPairings.push(roundPairings);
+  }
 
-    const teamContainerControl = document.getElementById(id);
-    const listTeamAdded = teamContainerControl?.getElementsByClassName("controlButton")[1] as HTMLButtonElement;
-    listTeamAdded.disabled = true;
-    // add to database to avoid shithousery
-    enableNewEditionButton()
+  if (checkbox.checked) {
+    for (let round = 0; round < rounds; round++) {
+      const secondRound: TeamPairings[] = [];
 
-    return editionList;
+      const newPlayerIndexes: number[] = [0].concat(playerIndexes);
+
+      const firstHalf = newPlayerIndexes.slice(0, half);
+      const secondHalf = newPlayerIndexes.slice(half, playerCount).reverse();
+
+      for (let i = 0; i < firstHalf.length; i++) {
+        secondRound.push({
+          home: editionList[secondHalf[i]],
+          away: editionList[firstHalf[i]],
+        });
+      }
+      // rotating the array
+      playerIndexes.push(playerIndexes.shift()!);
+      tournamentPairings.push(secondRound);
+    }
+  }
+  return tournamentPairings;
+}
+
+// function to generate the games from the edition and push to the games DB
+function populateGamesDB(id: string) {
+  let editionId = id;
+  // use the sorted list to create the games table
+  let games = genGamesTable();
+  // games: TeamPairings[][]
+  // round: TeamPairings[]
+  // generate the games and push to the games DB with empty values
+  games.forEach((round, index) => {
+    let rc = index + 1;
+    let gc = 1;
+    round.forEach((game: TeamPairings) => {
+      if (game.home && game.away) {
+        let gameId = uuidv4();
+
+        let newDB = dbGames();
+
+        if (newDB) {
+          newDB.push({
+            id: gameId,
+            edition: {
+              id: editionId,
+              round: rc,
+              game: gc++,
+            },
+            teams: {
+              home: {
+                id: game.home,
+                goals: null,
+                whoScored: null,
+                whoAssisted: null,
+              },
+              away: {
+                id: game.away,
+                goals: null,
+                whoScored: null,
+                whoAssisted: null,
+              },
+            },
+          });
+          saveGame(newDB);
+        }
+      }
+    });
+  });
+}
+
+// function to set date of new edition
+function dateOfEdition() {
+  const today = new Date();
+  const dayOfChamps =
+    today.getFullYear() +
+    '.' +
+    ('0' + (today.getMonth() + 1)).slice(-2) +
+    '.' +
+    ('0' + today.getDate()).slice(-2);
+  return dayOfChamps;
+}
+
+// estabilish truth to check if an edition was successfuly created
+let editionCreated = false;
+
+// generate schedule table based on the games DB
+function createEdition() {
+  // get edition name
+  const inputName = document.getElementById(
+    'inputEditionName',
+  ) as HTMLInputElement;
+  const checkboxDouble = document.getElementById(
+    'checkboxDoubleRound',
+  ) as HTMLInputElement;
+
+  const editionName = inputName.value;
+
+  if (editionName.length >= 3) {
+    // clear modal
+    closeModalCreateEdition();
+    // disable the new edition button
+    toggleNewEditionButton();
+    // clear control buttons
+    listTeams();
+    // set a single id for each champs
+    let editionId = uuidv4();
+    // get date of edition creation
+    const date = dateOfEdition();
+    // populate current edition database
+    let currentEdition = dbEditions();
+    // create empty array of objects
+    let editionTeams: { teamId: string; roster: [] }[] = [];
+    // iterate of edition list, get the team roster and push to editionTeams
+    for (let i = 0; i < editionList.length; i++) {
+      let roster = getRoster(editionList[i]);
+      editionTeams.push({ teamId: editionList[i], roster });
+    }
+    // push created edition to DB
+    currentEdition.push({ id: editionId, date, editionName, editionTeams });
+    saveEdition(currentEdition);
+    // populate the games database
+    populateGamesDB(editionId);
+    // empty the editionList
+    editionList = [];
+    saveEditionList(editionList);
+    // cry out in joy
+    alert(`EDITION ${editionName} CREATED`);
+    // clear edition name from the input and disable the button
+    inputName.value = '';
+    checkboxDouble.checked = false;
+    toggleNewEditionButton();
+    // edition is created
+    editionCreated = true;
+  } else {
+    // make sure input has at least 3 characters
+    alert('enter a name with at least 3 characters');
+  }
+}
+
+// find edition ID by using the game's ID
+function findEditionId(gameId: string) {
+  return dbGames().filter((game: Game) => game.id === gameId)[0].edition.id;
+}
+
+// find edition date by edition ID
+function findEditionDate(id: string) {
+  const editions = dbEditions();
+  for (let i = 0; i < editions.length; i++) {
+    if (editions[i].id === id) {
+      return editions[i].date;
+    }
+  }
+}
+// find edition name by edition ID
+function findEditionName(id: string) {
+  const editions = dbEditions();
+  for (let i = 0; i < editions.length; i++) {
+    if (editions[i].id === id) {
+      return editions[i].editionName.toUpperCase();
+    }
+  }
+}
+
+// function to find player's name using his ID
+function findPlayerName(id: string) {
+  const player = dbPlayers().find((player: Player) => player.id === id);
+  return player.name;
+  // return dbPlayers().find((player: Player) => player.id === id)[0].name
+}
+
+// function to find roster
+const findRoster = (id: string, field: string) => {
+  let game = dbGames().find((game: Game) => game.id === id);
+  let gameEditionId = game.edition.id;
+  let gameEdition = dbEditions().find(
+    (edition: Edition) => edition.id === gameEditionId,
+  );
+  let roster: any[] = [];
+  if (field === 'home') {
+    let team = game.teams.home.id;
+    gameEdition.editionTeams.forEach((item: any) => {
+      if (item.teamId === team) {
+        roster = item.roster;
+      }
+    });
+    return roster;
+  }
+  if (field === 'away') {
+    let team = game.teams.away.id;
+    gameEdition.editionTeams.forEach((item: any) => {
+      if (item.teamId === team) {
+        roster = item.roster;
+      }
+    });
+    return roster;
+  }
+};
+
+// ALL THE RENDER(ERS)
+
+// function that renders the game container
+function renderGameContainer(gameId: string, game: Game) {
+
+  let container = createElement({ tag: 'div', classes: 'container', id: gameId });
+  let gameContainer = createElement({ tag: 'div', classes: 'gameContainer' });
+  let homeTeam = createElement({ tag: 'span', classes: 'homeTeam' });
+  let scores = createElement({ tag: 'form', classes: 'scores' });
+  let homeGoals = createElement({ tag: 'input', classes: 'gameContainerHomeGoals' }) as HTMLInputElement;
+  let awayGoals = createElement({ tag: 'input', classes: 'gameContainerAwayGoals' }) as HTMLInputElement;
+  let awayTeam = createElement({ tag: 'span', classes: 'awayTeam' });
+  let x = createElement({ tag: 'span', classes: 'x' });
+  let gameCounter = createElement({ tag: 'div', classes: 'gameCounter' });
+  let gameRound = createElement({ tag: 'span', classes: 'gameRound' });
+  let gameNumber = createElement({ tag: 'span', classes: 'gameNumber' });
+  let scoreButton = createElement({ tag: 'button', classes: 'scoreButton' }) as HTMLButtonElement;
+  let gameRosters = createElement({ tag: 'div', classes: 'gameContainerRosters' })
+  let homeTeamRoster = createElement({ tag: 'div', classes: 'gameContainerHomeRoster' })
+  let awayTeamRoster = createElement({ tag: 'div', classes: 'gameContainerAwayRoster' });
+
+  gameCounter.appendChild(gameRound);
+  gameCounter.appendChild(gameNumber);
+  gameContainer.appendChild(gameCounter);
+
+  homeTeamRoster.classList.add('hidden');
+  awayTeamRoster.classList.add('hidden');
+  gameRosters.classList.add('hidden');
+
+  scores.appendChild(homeTeam);
+  scores.appendChild(homeGoals);
+  scores.appendChild(x);
+  scores.appendChild(awayGoals);
+  scores.appendChild(awayTeam);
+  scores.appendChild(scoreButton);
+  gameContainer.appendChild(scores);
+
+  container.appendChild(gameContainer);
+
+  gameRosters.appendChild(homeTeamRoster);
+  gameRosters.appendChild(awayTeamRoster);
+  container.appendChild(gameRosters);
+
+  homeTeam.innerHTML = getTeamName(game.teams.home.id || '').toUpperCase();
+  awayTeam.innerHTML = getTeamName(game.teams.away.id || '').toUpperCase();
+  x.innerHTML = ' x ';
+  gameRound.innerHTML = `R${game.edition.round}`;
+  gameNumber.innerHTML = `GAME ${game.edition.game}`;
+  scoreButton.innerText = `SAVE`;
+
+  // Add event listener to button only if it and the input form both exists
+  if (scores) scores.onsubmit = formSubmit;
+  if (scoreButton) scoreButton.addEventListener('click', () => addGame(gameId));
+
+  if (game.teams.home.goals) {
+    homeGoals.value = game.teams.home.goals.toString();
+  }
+  if (game.teams.away.goals) {
+    awayGoals.value = game.teams.away.goals.toString();
+  }
+  if (game.teams.home.goals && game.teams.away.goals) {
+    gameContainer.style.backgroundColor = '#eeeeee';
+    scoreButton.disabled = true;
+  }
+
+  gameContainer.addEventListener('click', () => toggleTeamRoster(game.id));
+
+  return container;
+}
+
+// function to toggle the rosters of the teams in a game container (calls the renderer)
+function toggleTeamRoster(id: string) {
+  const container = document.getElementById(id);
+  const gameRosters = container?.getElementsByClassName(
+    'gameContainerRosters',
+  )[0];
+  const homeTeamRoster = gameRosters?.getElementsByClassName(
+    'gameContainerHomeRoster',
+  )[0];
+  const awayTeamRoster = gameRosters?.getElementsByClassName(
+    'gameContainerAwayRoster',
+  )[0];
+
+  if (gameRosters) {
+    if (gameRosters.classList.contains('hidden')) {
+      gameRosters.classList.remove('hidden');
+      homeTeamRoster?.classList.remove('hidden');
+      awayTeamRoster?.classList.remove('hidden');
+      renderGameRoster(id);
+    } else {
+      if (homeTeamRoster) homeTeamRoster.innerHTML = '';
+      if (awayTeamRoster) awayTeamRoster.innerHTML = '';
+      gameRosters.classList.add('hidden');
+      homeTeamRoster?.classList.add('hidden');
+      awayTeamRoster?.classList.add('hidden');
+    }
+  }
+}
+
+// function to render the rosters of the teams in a game container
+function renderGameRoster(id: string) {
+  let homefield = 'home';
+  let awayfield = 'away';
+
+  const home = findRoster(id, homefield);
+  const away = findRoster(id, awayfield);
+
+  home!.sort((a, b) => b.posIndex - a.posIndex);
+  away!.sort((a, b) => b.posIndex - a.posIndex);
+
+  const container = document.getElementById(id);
+  const gameRosters = container?.getElementsByClassName('gameContainerRosters')[0] as HTMLElement;
+  const homeTeamRoster = gameRosters?.getElementsByClassName('gameContainerHomeRoster')[0] as HTMLElement;
+  const awayTeamRoster = gameRosters?.getElementsByClassName('gameContainerAwayRoster')[0] as HTMLElement;
+
+  const homeGoals = container?.getElementsByClassName('gameContainerHomeGoals')[0] as HTMLInputElement;
+  const awayGoals = container?.getElementsByClassName('gameContainerAwayGoals')[0] as HTMLInputElement;
+
+  let homeScore = 0;
+  let awayScore = 0;
+
+  const homers = createElement({ tag: 'ol', classes: 'homeList' }) as Element;
+  const outsiders = createElement({ tag: 'ol', classes: 'awayList' }) as Element;
+
+  const renderSelectOptions = (id: string, name: string, position: string) => {
+    const playerSelectOption = document.createElement('option');
+    playerSelectOption.value = id;
+    playerSelectOption.innerText = `${position.toUpperCase()} . ${name.toUpperCase()}`;
+    return playerSelectOption;
+  };
+
+  const renderPlayer = (field: string) => {
+    const playerGoalSelectionId = uuidv4();
+    const playerAssistSelectionId = uuidv4();
+
+    const emptyPlayerSelection = document.createElement('option');
+    emptyPlayerSelection.innerText = `select player`;
+    emptyPlayerSelection.value = ``;
+    emptyPlayerSelection.selected = true;
+    emptyPlayerSelection.disabled = true;
+
+    const emptyAssistSelection = document.createElement('option');
+    emptyAssistSelection.innerText = `add assist`;
+    emptyAssistSelection.value = ``;
+    emptyAssistSelection.selected = true;
+    emptyAssistSelection.disabled = true;
+
+    const listNumbers = document.createElement('li');
+    listNumbers.classList.add('listNumbers');
+
+    let playerGoal = document.createElement('select');
+    playerGoal.classList.add('playerStatsSelect');
+    playerGoal.dataset.playerGoalSelect = playerGoalSelectionId;
+
+    let playerAssist = document.createElement('select');
+    playerAssist.classList.add('playerStatSelect');
+    playerAssist.dataset.playerAssistSelect = playerAssistSelectionId;
+    playerAssist.disabled = true;
+
+    playerGoal.appendChild(emptyPlayerSelection);
+    playerAssist.appendChild(emptyAssistSelection);
+
+    if (field === homefield) {
+      Object.values(home!).forEach((player: Player) => {
+        playerGoal.appendChild(
+          renderSelectOptions(player.id, player.name, player.position),
+        );
+      });
+      if (playerGoal) {
+        playerGoal.onchange = (e: any) => {
+          const goalScorerId = e.target.value;
+          playerAssist.innerHTML = '';
+          playerAssist.appendChild(emptyAssistSelection);
+          Object.values(home!).forEach((player: Player) => {
+            if (goalScorerId !== player.id) {
+              playerAssist.appendChild(
+                renderSelectOptions(player.id, player.name, player.position),
+              );
+            }
+            playerAssist.disabled = false;
+          });
+        };
+      }
+      if (playerAssist) {
+        playerAssist.onchange = (e: any) => {
+          const assistId = e.target.value;
+          playerGoal.innerHTML = '';
+          playerGoal.appendChild(emptyPlayerSelection);
+          Object.values(home!).forEach((player: Player) => {
+            if (assistId !== player.id) {
+              playerGoal.appendChild(
+                renderSelectOptions(player.id, player.name, player.position),
+              );
+            }
+          });
+        };
+      }
+      listNumbers?.appendChild(playerGoal);
+      listNumbers?.appendChild(playerAssist);
+      return listNumbers;
+    }
+    if (field === awayfield) {
+      Object.values(away!).forEach((player: Player) => {
+        playerGoal.appendChild(
+          renderSelectOptions(player.id, player.name, player.position),
+        );
+      });
+      if (playerGoal) {
+        playerGoal.onchange = (e: any) => {
+          const goalScorerId = e.target.value;
+          playerAssist.innerHTML = '';
+          playerAssist.appendChild(emptyAssistSelection);
+          Object.values(away!).forEach((player: Player) => {
+            if (goalScorerId !== player.id) {
+              playerAssist.appendChild(
+                renderSelectOptions(player.id, player.name, player.position),
+              );
+            }
+            playerAssist.disabled = false;
+          });
+        };
+      }
+      if (playerAssist) {
+        playerAssist.onchange = (e: any) => {
+          const assistId = e.target.value;
+          playerGoal.innerHTML = '';
+          playerGoal.appendChild(emptyPlayerSelection);
+          Object.values(away!).forEach((player: Player) => {
+            if (assistId !== player.id) {
+              playerGoal.appendChild(
+                renderSelectOptions(player.id, player.name, player.position),
+              );
+            }
+          });
+        };
+      }
+      listNumbers?.appendChild(playerGoal);
+      listNumbers?.appendChild(playerAssist);
+      return listNumbers;
+    }
+  };
+
+  // colocar um listener no onKeyUp para sempre renderizar o conteudo do homeRoster ou away Roster
+  homeGoals.onkeyup = (e: any) => {
+    homeScore = e.target.value;
+
+    homers.innerHTML = '';
+
+    for (let index = 1; index <= homeScore; index++) {
+      let homePlayers = renderPlayer(homefield);
+      homers.appendChild(homePlayers!);
+    }
+    homeTeamRoster.appendChild(homers);
+  };
+  awayGoals.onkeyup = (e: any) => {
+    awayScore = e.target.value;
+
+    awayTeamRoster.classList.remove('hidden');
+
+    outsiders.innerHTML = '';
+
+    for (let index = 1; index <= awayScore; index++) {
+      let awayPlayers = renderPlayer(awayfield);
+      outsiders.appendChild(awayPlayers!);
+    }
+    awayTeamRoster.appendChild(outsiders);
+  };
+}
+
+// render the edition's title (name and date)
+function renderEditionTitle(id: string) {
+  const editionDate = findEditionDate(id);
+  const editionName = findEditionName(id);
+
+  const title = createElement({ tag: 'div', classes: 'title' });
+  const champsName = createElement({ tag: 'span', classes: 'champsName' });
+  const champsDate = createElement({ tag: 'span', classes: 'champsDate' });
+
+  champsName.innerHTML = `TAÇA ${editionName}`;
+  champsDate.innerHTML = `${editionDate}`;
+
+  title.appendChild(champsName);
+  title.appendChild(champsDate);
+
+  return title;
+}
+
+// render the games from any given edition using the edition's ID
+function renderEdition(id: string) {
+  const editionShown = document.getElementById('editionShown') as HTMLElement;
+
+  editionShown.innerHTML = '';
+
+  editionShown.appendChild(renderEditionTitle(id));
+
+  editionShown.appendChild(renderEditionResults(id));
+
+  editionShown.appendChild(renderPlayerStats(id));
+
+  const games = dbGames();
+
+  const gamesFromEdition = games.filter((game: Game) => game.edition.id === id);
+
+  gamesFromEdition.forEach((game: Game) => {
+    let container = renderGameContainer(game.id, game);
+
+    editionShown.appendChild(container);
+
+    return container;
+  });
 }
 
 // save game result to the database
 function addGame(gameId: string) {
-    const gameContainer = document.getElementById(gameId);
-    const homeGoal = gameContainer?.getElementsByClassName("homeGoals")[0] as HTMLInputElement;
-    const awayGoal = gameContainer?.getElementsByClassName("awayGoals")[0] as HTMLInputElement;
-    const scoreButton = gameContainer?.getElementsByClassName("scoreButton")[0] as HTMLButtonElement;
+  const container = document.getElementById(gameId);
+  const homeGoal = container?.getElementsByClassName('gameContainerHomeGoals')[0] as HTMLInputElement;
+  const awayGoal = container?.getElementsByClassName('gameContainerAwayGoals')[0] as HTMLInputElement;
+  const scoreButton = container?.getElementsByClassName('scoreButton')[0] as HTMLButtonElement;
+  const homeList = container?.getElementsByClassName('homeList')[0] as HTMLOListElement;
+  const awayList = container?.getElementsByClassName('awayList')[0] as HTMLOListElement;
 
-    // Depois de salvar o resultado do jogo, desabilitar o botão de salvar
-    scoreButton.disabled = true;
+  const homeGoalScorer = Array.from(homeList?.querySelectorAll(`.playerStatsSelect[data-player-goal-select]`) as NodeListOf<HTMLSelectElement>);
+  const homeGoalAssister = Array.from(homeList?.querySelectorAll(`.playerStatSelect[data-player-assist-select]`) as NodeListOf<HTMLSelectElement>);
 
-    if (homeGoal.value && awayGoal.value) {
-        const newDB = dbGames(); // copia do db
-        const currentGame = newDB.findIndex((game: Game) => game.id === gameId); // achei o index do jogo que eu quero alterar
+  const awayGoalScorer = Array.from(awayList?.querySelectorAll(`.playerStatsSelect[data-player-goal-select]`) as NodeListOf<HTMLSelectElement>);
+  const awayGoalAssister = Array.from(awayList?.querySelectorAll(`.playerStatSelect[data-player-assist-select]`) as NodeListOf<HTMLSelectElement>);
 
-        newDB[currentGame].teams.home.goals = homeGoal.value;
-        newDB[currentGame].teams.away.goals = awayGoal.value;
-
-        saveGame(newDB);
-
-        // whoScored(gameId)
+  let homeScorers: string[] = [];
+  homeGoalScorer.forEach((item) => {
+    if (item.options[item.selectedIndex].value !== '0') {
+      let goalScorerId = item.selectedOptions[0].value;
+      if (goalScorerId.length) {
+        homeScorers.push(goalScorerId);
+      }
     }
-}
+  });
 
-// generate a list to select players that either scored or assisted on goals
-// function whoScored(gameId: string) {
+  let homeAssisters: string[] = [];
+  homeGoalAssister.forEach((item) => {
+    let assistId = item.selectedOptions[0].value;
+    homeAssisters.push(assistId);
+  });
 
-//     const newDB = dbGames()
-//     const currentGame = newDB.findIndex((game: Game) => game.id === gameId)
-
-//     const editionTeam = newDB[currentGame].edition.id
-//     const homeScorer = newDB[currentGame].teams.home.id
-//     const awayScorer = newDB[currentGame].teams.away.id
-
-//     const findHomeTeam = newDB.filter((item: string) => item === homeScorer)
-//     const findHomeEditionTeam = findHomeTeam.roster.edition.filter((item: string) => item === editionTeam)
-//     const getHomeRoster = findHomeEditionTeam.roster
-
-//     const findAwayTeam = newDB.teams.filter((item: string) => item === homeScorer)
-//     const findAwayEditionTeam = findAwayTeam.roster.edition.filter((item: string) => item === editionTeam)
-//     const getAwayRoster = findAwayEditionTeam.roster
-
-//     for (let i = 0; i < getHomeRoster.length; i++) {
-//         const listHomeTeam = document.createElement("li");
-
-//         listHomeTeam.innerHTML = " - " + player.name + "   ";
-
-//         container!.append(listHomeTeam)
-//     }
-
-//     for (let i = 0; i < getAwayRoster.length; i++) {
-//         const listAwayTeam = document.createElement("li");
-
-//         listAwayTeam.innerHTML = " - " + player.name + "   ";
-
-//         container!.append(listAwayTeam)
-//     }
-//     // saveToDB(newDB)
-
-// }
-
-type TeamPairings = {
-    home: string | null;
-    away: string | null;
-}
-
-// function that generates the games table => MAKE IT ASK FOR 'TURNO' AND 'RETURNO', fix function to accomodate single or double round robin
-function genGamesTable() {
-    if (editionList.length % 2 == 1) {
-        editionList.push(null!);
+  let awayScorers: string[] = [];
+  awayGoalScorer.forEach((item) => {
+    if (item.options[item.selectedIndex].value !== '0') {
+      let goalScorerId = item.selectedOptions[0].value;
+      if (goalScorerId.length) {
+        awayScorers.push(goalScorerId);
+      }
     }
+  });
 
-    const playerCount = editionList.length;
-    const rounds = playerCount - 1;
-    const half = playerCount / 2;
+  let awayAssisters: string[] = [];
+  awayGoalAssister.forEach((item) => {
+    let assistId = item.selectedOptions[0].value;
+    awayAssisters.push(assistId);
+  });
 
-    const tournamentPairings: TeamPairings[][] = [];
-    const playerIndexes = editionList.map((_, i) => i).slice(1);
-
-    for (let round = 0; round < rounds; round++) {
-        const roundPairings: TeamPairings[] = [];
-
-        const newPlayerIndexes: number[] = [0].concat(playerIndexes);
-
-        const firstHalf = newPlayerIndexes.slice(0, half);
-        const secondHalf = newPlayerIndexes.slice(half, playerCount).reverse();
-
-        for (let i = 0; i < firstHalf.length; i++) {
-            roundPairings.push({
-                home: editionList[firstHalf[i]],
-                away: editionList[secondHalf[i]],
-            });
-        }
-        // rotating the array
-        playerIndexes.push(playerIndexes.shift()!);
-        tournamentPairings.push(roundPairings);
+  const checkLength = (homeArray: string[], awayArray: string[]) => {
+    if (homeArray.length !== awayArray.length) {
+      return false;
+    } else {
+      return true;
     }
-    return tournamentPairings;
+  };
+
+  if (homeGoal.value && awayGoal.value) {
+    const newDB = dbGames(); // copia do db
+    const currentGame = newDB.findIndex((game: Game) => game.id === gameId); // achei o index do jogo que eu quero alterar
+
+    if (
+      checkLength(homeScorers, homeAssisters) &&
+      checkLength(awayScorers, awayAssisters)
+    ) {
+      newDB[currentGame].teams.home.goals = homeGoal.value;
+      newDB[currentGame].teams.home.whoScored = homeScorers;
+      newDB[currentGame].teams.home.whoAssisted = homeAssisters;
+
+      newDB[currentGame].teams.away.goals = awayGoal.value;
+      newDB[currentGame].teams.away.whoScored = awayScorers;
+      newDB[currentGame].teams.away.whoAssisted = awayAssisters;
+
+      saveGame(newDB);
+
+      // Depois de salvar o resultado do jogo, desabilitar o botão de salvar
+      scoreButton.disabled = true;
+
+      // re-render the edition to let CSS do its thing
+      renderEdition(findEditionId(gameId));
+    } else {
+      alert('Must select all goal scorers');
+    }
+  }
 }
 
-function renderEditionTitle() {
-    // add date to current edition
-    const today = new Date();
-    const dayOfChamps = today.getFullYear() +"."+(today.getMonth() + 1)+"." +today.getDate();
+// click on the 'champs' navbutton
+function clickOnChamps() {
+  const champs = document.getElementById('navChamps');
+  champs?.click();
+}
+// function to create the new edition and render the correct games table
+function goChampsCreateEdition() {
+  createEdition();
 
-    // create title for the edition
-    const title = document.createElement("div");
-    const champsName = document.createElement("span");
-    const champsDate = document.createElement("span");
-    title.classList.add("title");
-    champsName.classList.add("champsName");
-    champsDate.classList.add("champsDate");
-    champsName.innerHTML = "Champs";
-    champsDate.innerHTML = dayOfChamps;
-    if (champs) champs.appendChild(title);
-    title.appendChild(champsName);
-    title.appendChild(champsDate);
+  if (editionCreated) {
+    clickOnChamps();
+    showHideEditionList();
+
+    const list = document.getElementById('listOfEditions');
+    const thisEdition = list?.lastElementChild as HTMLButtonElement;
+
+    if (list) thisEdition.click();
+  }
 }
 
-function renderGameContainer(gameId: string, roundContainer: HTMLElement, game: TeamPairings, gc: number) {
-    let container = document.createElement("div");
-    let gameContainer = document.createElement("div");
-    let homeTeam = document.createElement("span");
-    let scores = document.createElement("form");
-    let homeGoals = document.createElement("input");
-    let awayGoals = document.createElement("input");
-    let awayTeam = document.createElement("span");
-    let x = document.createElement("span");
-    let gameCounter = document.createElement("span");
-    let scoreButton = document.createElement("button");
-
-    container.id = gameId;
-
-    container.classList.add("container");
-    gameContainer.classList.add("gameContainer");
-    homeTeam.classList.add("homeTeam");
-    awayTeam.classList.add("awayTeam");
-    homeGoals.classList.add("homeGoals");
-    awayGoals.classList.add("awayGoals");
-    x.classList.add("x");
-    gameCounter.classList.add("gameCounter");
-    scoreButton.classList.add("scoreButton");
-    scores.classList.add("scores");
-
-    homeTeam.innerHTML = getTeamName(game.home || "");
-    awayTeam.innerHTML = getTeamName(game.away || "");
-    x.innerHTML = " x ";
-    gameCounter.innerHTML = `${gc}`; // print current value of gc
-    scoreButton.innerText = `save`;
-
-    // Add event listener to button only if it and the input form both exists
-    if (scores) scores.onsubmit = formSubmit;
-    if (scoreButton)
-        scoreButton.addEventListener("click", () =>
-            addGame(gameId)
-        );
-
-    scores.appendChild(homeTeam);
-    scores.appendChild(homeGoals);
-    scores.appendChild(x);
-    scores.appendChild(awayGoals);
-    scores.appendChild(awayTeam);
-    scores.appendChild(scoreButton);
-    container.appendChild(gameCounter);
-    gameContainer.appendChild(scores);
-    container.appendChild(gameContainer);
-    roundContainer.appendChild(container);
-
-    return roundContainer;
+// render the modal that creates a new edition
+function renderModalCreateEdition() {
+  const modalEditionName = document.getElementById('modalEditionName');
+  if (modalEditionName) modalEditionName.style.display = 'block';
 }
 
-// generate schedule table
-function createEdition() {
-    // Render edition title
-    renderEditionTitle();
-
-    // use the shuffled list to create the games table
-    let games = genGamesTable();
-    console.log(games);
-
-    // set a single id for each champs
-    let editionId = uuidv4();
-
-    // start the HTML
-    const Table = document.createElement("div");
-    Table.id = editionId;
-    document.body.appendChild(Table);
-
-    // 'global' acting as a counter for the games
-    let gc = 1;
-
-    // games: TeamPairings[][]
-    // round: TeamPairings[]
-    // generate the items on the page based on each game divided by rounds
-    games.forEach((round, index) => {
-        let rc = index + 1;
-        let roundContainer = document.createElement("div");
-        let roundCounter = document.createElement("span");
-
-        roundContainer.classList.add("roundContainer");
-        roundCounter.classList.add("roundCounter");
-        roundCounter.innerHTML = "RODADA " + rc; // pode ser também ${rc++} se deixar rc=index / rc++ = rc+1
-
-        Table.append(roundCounter);
-
-        round.forEach((game: TeamPairings) => {
-            console.log(game);
-            if (game.home && game.away) {
-                let gameId = uuidv4();
-
-                // render game container
-                renderGameContainer(gameId, roundContainer, game, gc);
-
-                let newDB = dbGames();
-
-                if (newDB) {
-                    newDB.push({
-                        id: gameId,
-                        edition: {
-                            id: editionId,
-                            round: rc,
-                            game: gc,
-                        },
-                        teams: {
-                            home: {
-                                id: game.home,
-                                goals: null,
-                                whoScored: null,
-                                whoAssisted: null,
-                            },
-                            away: {
-                                id: game.away,
-                                goals: null,
-                                whoScored: null,
-                                whoAssisted: null,
-                            },
-                        },
-                    });
-                    saveGame(newDB);
-                }
-                gc++; // add 1 to gc -- had to put it down here because it was starting at game 2 in the database
-            }
-        });
-        Table.appendChild(roundContainer);
-    });
+// hide the modal that creates a new edition
+function closeModalCreateEdition() {
+  const modalEditionName = document.getElementById('modalEditionName');
+  if (modalEditionName) modalEditionName.style.display = 'none';
 }
+
+// function to render the list of editions
+function renderEditionList() {
+  const editions = dbEditions();
+
+  if (editions.length > 0) {
+    for (let i = 0; i < editions.length; i++) {
+      const editionButton = document.createElement('button');
+      const editionDate = document.createElement('span');
+      const editionName = document.createElement('span');
+      editionButton.classList.add('editionButton');
+      editionDate.classList.add('editionButtonDate');
+      editionName.classList.add('editionButtonName');
+      editionButton.appendChild(editionDate);
+      editionButton.appendChild(editionName);
+      editionDate.innerHTML = `${editions[i].date}`;
+      editionName.innerHTML = `TAÇA ${editions[i].editionName.toUpperCase()}`;
+      editionButton.id = editions[i].id;
+      editionButton.onclick = () => renderEditionHideList(editions[i].id);
+      listOfEditions?.appendChild(editionButton);
+    }
+  }
+}
+
+// function to hide the list of editions after an edition is clicked
+function renderEditionHideList(id: string) {
+  renderEdition(id);
+  showHideEditionList();
+}
+
+//function to toggle the list of editions
+const showHideEditionList = () => {
+  const list = document.getElementById('listOfEditions') as HTMLElement;
+  list.innerHTML = '';
+  if (list) {
+    if (list.classList.contains('hidden')) {
+      list.classList.remove('hidden');
+      renderEditionList();
+    } else {
+      list.classList.add('hidden');
+    }
+  }
+};
+
+// function to remove a team for the edition list (in case of misclick or whatever)
+function removeFromEditionList(id: string) {
+  if (editionList.includes(id)) {
+    editionList.splice(editionList.indexOf(id), 1);
+
+    const teamContainerControl = document.getElementById(id);
+    const addToEditionButton = teamContainerControl?.getElementsByClassName(
+      'controlButton',
+    )[1] as HTMLButtonElement;
+
+    addToEditionButton.classList.remove('removeFromEditionButton');
+    addToEditionButton.innerText = `[ add to next edition ]`;
+    addToEditionButton.onclick = () => {
+      generateTeamsList(id);
+    };
+  }
+  saveEditionList(editionList);
+  toggleNewEditionButton();
+}
+
+// function to toggle the availability of the add/remove to next edition button
+function toggleNextEditionButton(id: string) {
+  const teamContainerControl = document.getElementById(id);
+  const addToEditionButton = teamContainerControl?.getElementsByClassName(
+    'controlButton',
+  )[1] as HTMLButtonElement;
+
+  addToEditionButton.classList.add('removeFromEditionButton');
+  addToEditionButton.innerText = `[ remove from next edition ]`;
+  addToEditionButton.onclick = () => removeFromEditionList(id);
+}
+
+// function to enable the button to create a new edition if editionList has 3 or more teams
+export function toggleNewEditionButton() {
+  if (editionList.length >= 3) {
+    newEditionButton.disabled = false;
+    newEditionButton.addEventListener('click', () =>
+      renderModalCreateEdition(),
+    );
+  } else {
+    newEditionButton.disabled = true;
+  }
+}
+
+// estabilish important constants
+const champs = document.getElementById('champs');
+const teams = document.getElementById('teams');
+
+// add the button element to create new editions
+const newEditionButton = document.createElement('button');
+newEditionButton.classList.add('newEditionButton');
+newEditionButton.innerHTML = '';
+newEditionButton.disabled = true;
+teams?.appendChild(newEditionButton);
+
+// create a modal element to get input of edition name
+const modalEditionName = document.createElement('div');
+modalEditionName.classList.add('modalEditionName');
+modalEditionName.id = 'modalEditionName';
+
+// create a form element for the modal
+const formEditionName = document.createElement('form');
+formEditionName.classList.add('formEditionName');
+formEditionName.id = 'formEditionName';
+formEditionName.setAttribute('method', 'post');
+
+// create an input element for the form
+const inputEditionName = document.createElement('input');
+inputEditionName.classList.add('inputEditionName');
+inputEditionName.setAttribute('id', 'inputEditionName');
+inputEditionName.setAttribute('type', 'text');
+inputEditionName.setAttribute('placeholder', 'enter edition name');
+inputEditionName.setAttribute('required', '');
+inputEditionName.setAttribute('pattern', '[a-zA-z]{3,45}');
+inputEditionName.setAttribute('autocomplete', 'off');
+
+// create label and checkbox elements for double round robin
+const checkboxDoubleRoundLabel = document.createElement('label');
+checkboxDoubleRoundLabel.setAttribute('for', 'checkboxDoubleRound');
+checkboxDoubleRoundLabel.classList.add('checkboxDoubleRoundLabel');
+checkboxDoubleRoundLabel.innerHTML = 'double round robin';
+
+const checkboxDoubleRound = document.createElement('input');
+checkboxDoubleRound.classList.add('checkboxDoubleRound');
+checkboxDoubleRound.setAttribute('id', 'checkboxDoubleRound');
+checkboxDoubleRound.setAttribute('type', 'checkbox');
+checkboxDoubleRound.setAttribute('value', 'double');
+checkboxDoubleRound.setAttribute('name', 'round');
+// checkboxDoubleRound.setAttribute('checked', 'false');
+
+// create a button to submit input for the form
+const submitEditionName = document.createElement('button');
+submitEditionName.classList.add('submitEditionName');
+submitEditionName.innerText = `CREATE EDITION`;
+submitEditionName.id = 'submitEditionName';
+submitEditionName.setAttribute('value', 'Submit');
+submitEditionName.addEventListener('click', () => goChampsCreateEdition());
+
+// create a button to close the modal
+const closeEditionName = document.createElement('button');
+closeEditionName.classList.add('closeEditionName');
+closeEditionName.innerText = `CLOSE`;
+closeEditionName.id = 'closeEditionName';
+closeEditionName.addEventListener('click', () => closeModalCreateEdition());
+
+// append the elements that compose the modal
+formEditionName.appendChild(inputEditionName);
+formEditionName.appendChild(checkboxDoubleRound);
+formEditionName.appendChild(checkboxDoubleRoundLabel);
+formEditionName.appendChild(submitEditionName);
+formEditionName.appendChild(closeEditionName);
+modalEditionName.appendChild(formEditionName);
+teams?.appendChild(modalEditionName);
+
+// submit the form preventing default
+if (formEditionName) formEditionName.onsubmit = formSubmit;
+
+// create the clickable 'banner' that renders the list of editions
+const toggleEditionList = document.createElement('button');
+toggleEditionList.classList.add('toggleEditionList');
+toggleEditionList.innerHTML = `LIST OF CHAMPS`;
+toggleEditionList.id = 'toggleEditionList';
+toggleEditionList.addEventListener('click', () => showHideEditionList());
+champs?.appendChild(toggleEditionList);
+
+// create the div that contains the list of editions
+const listOfEditions = document.createElement('div');
+listOfEditions.classList.add('listOfEditions');
+listOfEditions.classList.add('hidden');
+listOfEditions.id = 'listOfEditions';
+listOfEditions.innerHTML = '';
+champs?.appendChild(listOfEditions);
+
+// create the div that renders the title and table of games
+const editionShown = document.createElement('div');
+editionShown.classList.add('editionShown');
+editionShown.id = 'editionShown';
+champs?.appendChild(editionShown);

@@ -2,37 +2,25 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   dbPlayers,
   Player,
-  dbGames,
-  Game,
   dbTeams,
   Team,
   saveTeam,
   formSubmit,
   emptyMessage,
+  createElement
 } from './app';
-import { generateTeamsList, enableNewEditionButton } from './editions';
+import { generateTeamsList, toggleNewEditionButton } from './editions';
 import { colors, teamsPalette } from './appConfig';
+
 
 const teams = document.getElementById('teams');
 
 // Set form to add teams
-const teamForm = document.createElement('form');
-const teamInput = document.createElement('input');
-const abbrInput = document.createElement('input');
-const teamSubmit = document.createElement('button');
-const teamsList = document.createElement('div');
-
-teamForm.classList.add('teamForm');
-teamInput.classList.add('teamInput');
-abbrInput.classList.add('teamInput');
-teamSubmit.classList.add('teamSubmit');
-teamsList.classList.add('teamsList');
-
-teamForm.id = 'teamForm';
-teamInput.id = 'teamInput';
-abbrInput.id = 'abbrInput';
-teamSubmit.id = 'teamSubmit';
-teamsList.id = 'teamsList';
+const teamForm = createElement({tag:'form',id:'teamForm',classes:'teamForm'}) as HTMLFormElement
+const teamInput = createElement({tag:'input',id:'teamInput',classes:'teamInput'}) as HTMLInputElement
+const abbrInput = createElement({tag:'input',id:'abbrInput',classes:'teamInput'}) as HTMLInputElement
+const teamSubmit = createElement({tag:'button',id:'teamSubmit',classes:'teamSubmit'}) as HTMLButtonElement
+const teamsList = createElement({tag:'div',id:'teamsList',classes:'teamsList'})
 
 teamForm.setAttribute('method', 'post');
 
@@ -62,30 +50,25 @@ if (teams) teams.appendChild(teamForm);
 if (teams) teams.appendChild(teamsList);
 
 if (teamForm) teamForm.onsubmit = formSubmit;
-if (teamInput && teamSubmit)
-  teamSubmit.addEventListener('click', () =>
-    addTeam(teamInput.value, abbrInput.value),
-  );
+if (teamInput && teamSubmit) teamSubmit.addEventListener('click', () => addTeam(teamInput.value, abbrInput.value));
+
+listTeams()
 
 function renderTeamContainer(id: string) {
-  const teamObject = dbTeams().filter((team: Team) => team.id === id);
+  const teamObject = dbTeams().find((team: Team) => team.id === id);
 
-  const teamContainer = document.createElement('div');
-  const teamName = document.createElement('p');
-  const teamAbbr = document.createElement('p');
+  const teamContainer = createElement({tag:'div',classes:'teamContainer'})
+  const teamName = createElement({tag:'p',classes:'teamName'})
+  const teamAbbr = createElement({tag:'p',classes:'teamAbbr'})
 
-  teamContainer.classList.add('teamContainer');
-  teamName.classList.add('teamName');
-  teamAbbr.classList.add('teamAbbr');
+  teamName.innerHTML = `${teamObject.name.toUpperCase()}`;
+  teamAbbr.innerHTML = `${teamObject.abbr.toUpperCase()}`;
 
-  teamName.innerHTML = `${teamObject[0].name}`;
-  teamAbbr.innerHTML = `${teamObject[0].abbr}`;
-
-  let colorsExists = Object.values(teamsPalette).includes(teamObject[0].abbr);
+  let colorsExists = Object.values(teamsPalette).includes(teamObject.abbr);
   if (colorsExists) {
-    teamAbbr.style.color = colors.teamsPalette[teamObject[0].abbr].primary;
+    teamAbbr.style.color = colors.teamsPalette[teamObject.abbr].primary;
     teamAbbr.style.backgroundColor =
-      colors.teamsPalette[teamObject[0].abbr].secondary;
+      colors.teamsPalette[teamObject.abbr].secondary;
   }
 
   teamName.addEventListener('click', () => toggleTeamRoster(id));
@@ -97,23 +80,19 @@ function renderTeamContainer(id: string) {
 }
 
 function renderTeamControl(id: string) {
-  const teamControl = document.createElement('div');
-  const listTeamRemove = document.createElement('button');
-  const listTeamAdd = document.createElement('button');
+    const teamControl = createElement({tag:'div',classes:'teamControl'})
+    const teamRemove = createElement({tag:'button',classes:'controlButton'}) as HTMLButtonElement
+    const teamAddToEdition = createElement({tag:'button',classes:'controlButton'})
+    
+  teamRemove.innerText = `[ remove ]`;
+  teamAddToEdition.innerText = `[ add to next edition ]`;
 
-  teamControl.classList.add('teamControl');
-  listTeamRemove.classList.add('controlButton');
-  listTeamAdd.classList.add('controlButton');
+  teamControl.appendChild(teamRemove);
+  teamControl.appendChild(teamAddToEdition);
 
-  listTeamRemove.innerText = `[ remove ]`;
-  listTeamAdd.innerText = `[ add to next edition ]`;
-
-  teamControl.appendChild(listTeamRemove);
-  teamControl.appendChild(listTeamAdd);
-
-  if (checkRoster(id)) listTeamRemove.disabled = true;
-  if (listTeamRemove) listTeamRemove.onclick = () => removeTeam(id);
-  if (listTeamAdd) listTeamAdd.onclick = () => generateTeamsList(id);
+  if (checkRoster(id)) teamRemove.disabled = true;
+  if (teamRemove) teamRemove.onclick = () => removeTeam(id);
+  if (teamAddToEdition) teamAddToEdition.onclick = () => generateTeamsList(id);
 
   return teamControl;
 }
@@ -122,25 +101,17 @@ function renderTeamControl(id: string) {
 function renderTeamRoster(id: string) {
   const roster = getRoster(id);
 
-  console.log(roster)
-
-  const teamRoster = document.createElement('div');
-  teamRoster.classList.add('teamRoster');
+  const teamRoster = createElement({tag:'div',classes:'teamRoster'})
   teamRoster.dataset.id = id;
   teamRoster.classList.add('hidden');
-  
-  roster.forEach((player: Player) => {
-    const rosterPlayerContainer = document.createElement('div');
-    const rosterPlayerName = document.createElement('div');
-    const rosterPlayerPosition = document.createElement('div');
 
-    rosterPlayerContainer.classList.add('rosterPlayerContainer');
-    rosterPlayerPosition.classList.add('rosterPlayerPosition');
-    rosterPlayerName.classList.add('rosterPlayerName');
+  roster.forEach((player: Player) => {
+    const rosterPlayerContainer = createElement({tag:'div',classes:'rosterPlayerContainer'});
+    const rosterPlayerName = createElement({tag:'div',classes:'rosterPlayerName'});
+    const rosterPlayerPosition = createElement({tag:'div',classes:'rosterPlayerPosition'});
 
     rosterPlayerPosition.innerHTML = `${player.position}`;
-    rosterPlayerPosition.style.backgroundColor =
-      colors.playerPosition[player.position];
+    rosterPlayerPosition.style.backgroundColor = colors.playerPosition[player.position];
 
     rosterPlayerName.innerHTML = `${player.name.toUpperCase()}`;
 
@@ -151,18 +122,23 @@ function renderTeamRoster(id: string) {
   return teamRoster;
 }
 
-function getRoster(id: string) {
-    const teamId = id;
-    const roster = dbPlayers().filter((player: Player) => player.teamId === teamId);
+export function getRoster(id: string) {
+  const teamId = id;
+  const roster = dbPlayers().filter(
+    (player: Player) => player.teamId === teamId,
+  );
 
-    roster.sort((a,b) => { return b.positionIndex - a.positionIndex });
+  roster.sort((a, b) => {
+    return b.positionIndex - a.positionIndex;
+  });
 
-    return roster;
-
+  return roster;
 }
 
 function toggleTeamRoster(id: string) {
   const teamRoster = document.querySelector(`.teamRoster[data-id="${id}"]`);
+  const teamContainer = document.getElementById(id);
+  // const teamName = teamContainer.getElementsByClassName('teamContainer')[0] as HTMLElement;
 
   if (teamRoster) {
     if (teamRoster.classList.contains('hidden')) {
@@ -170,8 +146,17 @@ function toggleTeamRoster(id: string) {
     } else {
       teamRoster.classList.add('hidden');
     }
+
+  if (teamRoster) {
+    if (!teamRoster.classList.contains('hidden')) {
+        teamContainer?.classList.add('showingTeamRoster')
+    } else {
+        teamContainer?.classList.remove('showingTeamRoster')
+    }
+  }
   }
 }
+
 function populateTeamsList() {
   const teams = dbTeams();
   teams.sort((a: Team, b: Team) => a.name.localeCompare(b.name));
@@ -183,9 +168,7 @@ function populateTeamsList() {
     let control = renderTeamControl(team.id);
     let roster = renderTeamRoster(team.id);
 
-    const teamContainerControl = document.createElement('div');
-    teamContainerControl.classList.add('teamContainerControl');
-    teamContainerControl.id = team.id;
+    const teamContainerControl = createElement({tag:'div',classes:'teamContainerControl',id:team.id});
     teamContainerControl.appendChild(container);
     teamContainerControl.appendChild(control);
     if (teamsList) teamsList.appendChild(teamContainerControl);
@@ -194,31 +177,32 @@ function populateTeamsList() {
 }
 
 export function getTeamName(id: string) {
-  return dbTeams()
-    .filter((team: Team) => team.id === id)
-    .map((name: Team) => name.name)[0];
+    return dbTeams()
+        .filter((team: Team) => team.id === id)
+        .map((name: Team) => name.name)[0];
 }
 export function getTeamAbbr(id: string) {
-  return dbTeams()
-    .filter((team: Team) => team.id === id)
-    .map((name: Team) => name.abbr)[0];
+    return dbTeams()
+        .filter((team: Team) => team.id === id)
+        .map((name: Team) => name.abbr)[0];
 }
 
 //list team
 export function listTeams() {
-  if (teamsList) teamsList.innerHTML = '';
 
-  const empty = () => dbTeams().length === 0 || undefined;
+    if (teamsList) teamsList.innerHTML = '';
 
-  if (teamsList && empty()) {
-    emptyMessage(teamsList);
-  }
+    const empty = () => dbTeams().length === 0 || undefined;
 
-  if (teamsList && !empty()) {
-    populateTeamsList();
-    findDuplicateTeams();
-  }
-  enableNewEditionButton();
+    if (teamsList && empty()) {
+        emptyMessage(teamsList);
+    }
+
+    if (teamsList && !empty()) {
+        populateTeamsList();
+        findDuplicateTeams();
+    }
+    toggleNewEditionButton();
 }
 
 function findDuplicateTeams() {
@@ -283,5 +267,3 @@ function checkRoster(id: string) {
     return false;
   }
 }
-
-listTeams();

@@ -8,22 +8,25 @@ import {
   formSubmit,
   emptyMessage,
 } from './app';
-import { listTeams, getTeamName, getTeamAbbr } from './teams';
+import { listTeams, getTeamAbbr } from './teams';
 import { position, positionIndex, colors, teamsPalette } from './appConfig';
 
 const players = document.getElementById('players');
 
+const playerFormFilter = document.createElement('div')
 const playerForm = document.createElement('form');
 const playerInput = document.createElement('input');
 const positionInput = document.createElement('input');
 const playerSubmit = document.createElement('button');
 const playersList = document.createElement('div');
 
-playerForm.classList.add('teamForm');
-playerInput.classList.add('teamInput');
+playerFormFilter.classList.add('playerFormFilter')
+playerForm.classList.add('playerForm');
+playerInput.classList.add('playerInput');
 positionInput.classList.add('positionInput');
-playerSubmit.classList.add('teamSubmit');
+playerSubmit.classList.add('playerSubmit');
 
+playerFormFilter.id = 'playerFormFilter'
 playerForm.id = 'playerForm';
 playerInput.id = 'playerInput';
 positionInput.id = 'positionInput';
@@ -43,11 +46,89 @@ positionInput.setAttribute('readonly', '');
 playerSubmit.setAttribute('value', 'Submit');
 playerSubmit.innerText = `save`;
 
+// FILTERS
+const playerFilter = document.createElement('div')
+playerFilter.classList.add('playerFilter')
+
+const clearFilterValues = () => {
+    const positionFilter = document.getElementById('playerFilterPositionSelect') as HTMLSelectElement
+    positionFilter.options[0].selected = true
+    const teamFilter = document.getElementById('playerFilterTeamSelect') as HTMLSelectElement
+    teamFilter.options[0].selected = true
+    listPlayers()
+}
+
+const playerFilterClear = document.createElement('div')
+playerFilterClear.classList.add('playerFilterClear')
+
+const clearFilters = document.createElement('button')
+clearFilters.classList.add('clearFilters')
+clearFilters.addEventListener('click', clearFilterValues)
+clearFilters.innerText = `X`
+
+playerFilterClear.appendChild(clearFilters)
+
+const clearFilterTooltip = document.createElement('span')
+clearFilterTooltip.classList.add('tooltip')
+clearFilterTooltip.innerText = `CLEAR`
+
+playerFilterClear.appendChild(clearFilterTooltip)
+
+const emptyPositionFilter = document.createElement('option')
+emptyPositionFilter.innerText = `filter by position`
+emptyPositionFilter.value = ``
+emptyPositionFilter.selected = true
+emptyPositionFilter.disabled = true
+
+const emptyTeamFilter = document.createElement('option')
+emptyTeamFilter.innerText = `filter by team`
+emptyTeamFilter.value = ``
+emptyTeamFilter.selected = true
+emptyTeamFilter.disabled = true
+
+const playerFilterPositionSelect = document.createElement('select')
+playerFilterPositionSelect.name = 'playerFilterPosition'
+playerFilterPositionSelect.classList.add('playerFilterPosition')
+playerFilterPositionSelect.id = 'playerFilterPositionSelect'
+playerFilterPositionSelect.appendChild(emptyPositionFilter)
+
+Object.values(position).forEach((pos: string) => {
+    const playerFilterPosition = document.createElement('option')
+    playerFilterPosition.innerText = `${pos}`
+    playerFilterPosition.value = `${pos}`
+    playerFilterPositionSelect.appendChild(playerFilterPosition)
+})
+
+const playerFilterTeamSelect = document.createElement('select')
+playerFilterTeamSelect.name = 'playerFilterTeam'
+playerFilterTeamSelect.classList.add('playerFilterTeam')
+playerFilterTeamSelect.id = 'playerFilterTeamSelect'
+playerFilterTeamSelect.appendChild(emptyTeamFilter)
+
+const freeAgent = document.createElement('option')
+freeAgent.innerText = `FREE AGENTS`
+freeAgent.value = `freeAgent`
+playerFilterTeamSelect.appendChild(freeAgent)
+
+dbTeams().forEach((team: Team) => {
+    const playerFilterTeam = document.createElement('option')
+    playerFilterTeam.innerText = `${team.name}`
+    playerFilterTeam.value = `${team.abbr}`
+    playerFilterTeamSelect.appendChild(playerFilterTeam)
+})
+
+playerFilter.appendChild(playerFilterPositionSelect)
+playerFilter.appendChild(playerFilterTeamSelect)
+// END OF FILTERS
+
 if (players) {
   playerForm.appendChild(playerInput);
   playerForm.appendChild(positionInput);
   playerForm.appendChild(playerSubmit);
-  players.appendChild(playerForm);
+  playerFormFilter.appendChild(playerForm)
+  playerFormFilter.appendChild(playerFilter)
+  playerFormFilter.appendChild(playerFilterClear)
+  players.appendChild(playerFormFilter);
   players.appendChild(playersList);
 }
 
@@ -63,26 +144,185 @@ const resetPlayersList = () => {
 };
 
 const filterPlayers = (e: any) => {
-  let value = e.target.value.trim(); // value of input
+    let value = e.target.value.trim(); // value of input
 
-  playersDB = dbPlayers().filter((player: Player) => {
-    const name = player.name.toLowerCase();
-
-    if (name.includes(value.toLowerCase())) {
-      return player;
+    if (checkTeamFilter()) {
+        const teamFilter = document.getElementById('playerFilterTeamSelect') as HTMLSelectElement
+        const teamSelected = teamFilter.options[teamFilter.selectedIndex].value
+        if (teamSelected === 'freeAgent') {
+            playersDB = dbPlayers().filter((player: Player) => player.teamId === '').filter((player: Player) => {
+                const name = player.name.toLowerCase()
+                if (name.includes((value.toLowerCase()))) {
+                    return player
+                }
+            })
+            listPlayers()
+        } else {
+            playersDB = dbPlayers().filter((player: Player) => {
+                const team = getTeamAbbr(player.teamId)
+                const name = player.name.toLowerCase()
+                if ((teamSelected === team) && (name.includes((value.toLowerCase())))) {
+                return player
+            }
+        })
+            listPlayers()
+        }
     }
-  });
+    if (checkPositionFilter()) {
+        const positionFilter = document.getElementById('playerFilterPositionSelect') as HTMLSelectElement
+        const positionSelected = positionFilter.options[positionFilter.selectedIndex].value
+        playersDB = dbPlayers().filter((player: Player) => {
+            const position = player.position.toUpperCase()
+            const name = player.name.toLowerCase()
+            if ((position === positionSelected) && (name.includes((value.toLowerCase())))) {
+                return player
+            }
+        })
+        listPlayers()
+    }
+    if (checkPositionFilter() && checkTeamFilter()) {
+        const teamFilter = document.getElementById('playerFilterTeamSelect') as HTMLSelectElement
+        const teamSelected = teamFilter.options[teamFilter.selectedIndex].value
+        const positionFilter = document.getElementById('playerFilterPositionSelect') as HTMLSelectElement
+        const positionSelected = positionFilter.options[positionFilter.selectedIndex].value
 
-  listPlayers();
-};
+        if (teamSelected === 'freeAgent') {
+             playersDB = dbPlayers().filter((player: Player) => player.teamId === '').filter((player: Player) => {
+                const name = player.name.toLowerCase()
+                const position = player.position.toUpperCase()
+                if ((position === positionSelected) && name.includes((value.toLowerCase()))) {
+                    return player
+                }
+            })
+            listPlayers()
+        } else {
+            playersDB = dbPlayers().filter((player: Player) => {
+                const team = getTeamAbbr(player.teamId)
+                const position = player.position.toUpperCase()
+                const name = player.name.toLowerCase()
+                if ((position === positionSelected) && (team === teamSelected) && (name.includes((value.toLowerCase())))) {
+                    return player
+                }
+            })
+            listPlayers()
+        }
+    }
+    if ((!checkTeamFilter()) && (!checkPositionFilter())) {
+        playersDB = dbPlayers().filter((player: Player) => {
+            const name = player.name.toLowerCase();
+
+            if (name.includes(value.toLowerCase())) {
+                return player;
+            }
+        });
+        listPlayers();
+    }
+}
 
 playerInput.addEventListener('keyup', filterPlayers);
+
+function checkPositionFilter() {
+
+    const positionFilter = document.getElementById('playerFilterPositionSelect') as HTMLSelectElement
+    const positionSelected = positionFilter.options[positionFilter.selectedIndex].index
+    if (positionSelected !== 0) return true
+}
+function checkTeamFilter() {
+
+    const teamFilter = document.getElementById('playerFilterTeamSelect') as HTMLSelectElement
+    const teamSelected = teamFilter.options[teamFilter.selectedIndex].index
+    if (teamSelected !== 0) return true
+}
+
+const filterByPosition = (event: any) => {
+    let selectedElement = event.target
+    let positionSelected = selectedElement.value
+
+    if (checkTeamFilter()) {
+        const teamFilter = document.getElementById('playerFilterTeamSelect') as HTMLSelectElement
+        const teamSelected = teamFilter.options[teamFilter.selectedIndex].value
+
+        if (teamSelected === 'freeAgent') {
+             playersDB = dbPlayers().filter((player: Player) => player.teamId === '').filter((player: Player) => {
+                const position = player.position.toUpperCase()
+                if (position === positionSelected) {
+                    return player
+                }
+            })
+            listPlayers()
+        } else {
+            playersDB = dbPlayers().filter((player: Player) => {
+                const team = getTeamAbbr(player.teamId)
+                const position = player.position.toUpperCase()
+                if ((position === positionSelected) && (team === teamSelected)) {
+                    return player
+                }
+            })
+            listPlayers()
+        }
+    } else {
+        playersDB = dbPlayers().filter((player: Player) => {
+            const pos = player.position.toUpperCase()
+            if (positionSelected === pos) { return player }
+        })
+    listPlayers()
+    }
+}
+
+const filterByTeam = (event: any) => {
+    let selectedElement = event.target
+    let teamSelected = selectedElement.value
+
+    if (checkPositionFilter()) {
+        const positionFilter = document.getElementById('playerFilterPositionSelect') as HTMLSelectElement
+        const positionSelected = positionFilter.options[positionFilter.selectedIndex].value
+
+        if (teamSelected === 'freeAgent') {
+            playersDB = dbPlayers().filter((player: Player) => player.teamId === '').filter((player: Player) => {
+                const position = player.position.toUpperCase()
+                if (position === positionSelected) {
+                   return player
+            }
+        })
+        listPlayers()
+        } else {
+            playersDB = dbPlayers().filter((player: Player) => {
+                const team = getTeamAbbr(player.teamId)
+                const position = player.position.toUpperCase()
+                if ((teamSelected === team) && (positionSelected === position)) {
+                    return player
+                }
+        })
+        listPlayers()
+        }
+    } else {
+
+        if (teamSelected === 'freeAgent') {
+            playersDB = dbPlayers().filter((player: Player) => player.teamId === '').filter((player: Player) => {
+                return player
+            })
+        listPlayers()
+        }
+
+        if (teamSelected !== 'freeAgent') {
+            playersDB = dbPlayers().filter((player: Player) => {
+                        const team = getTeamAbbr(player.teamId)
+                        if (teamSelected === team) {
+                            return player
+                        }
+            })
+            listPlayers()
+        }
+    }
+}
+playerFilterPositionSelect.addEventListener('change', filterByPosition)
+playerFilterTeamSelect.addEventListener('change', filterByTeam)
 
 function addPlayer(name: string, position: string) {
   const playerInput = document.getElementById(
     'playerInput',
   ) as HTMLInputElement;
-  
+
   const id = uuidv4();
 
   const posIndex = positionIndex.positionIndex[position];
@@ -242,12 +482,12 @@ function listPlayers() {
 
 function findDuplicatePlayers(name: string, position: string) {
   // find duplicate players
-  const result = dbPlayers().find((player) => (player.name.trim() === name.trim()) && (player.position === position));
+  const result = dbPlayers().find((player: Player) => (player.name.trim() === name.trim()) && (player.position === position));
 
   if (result) {
     alert('NOT AUTHORIZED [ duplicate entry ]');
   }
-  
+
   return result;
 
   // Update the list view
@@ -272,7 +512,6 @@ closeModal.innerHTML = `X`
 closeModal.classList.add('closeModal');
 closeModal.href = '#';
 closeModal.onclick = (e) => {
-  console.log(e);
   handleCloseModal(e);
 }
 
@@ -305,7 +544,7 @@ function openPlayerModal(id: string) {
 
   teams.forEach((team: Team) => {
     const eachTeam = document.createElement('p');
-    eachTeam.innerHTML = `${team.name}`;
+    eachTeam.innerHTML = `${team.name.toUpperCase()}`;
     eachTeam.id = team.id;
     eachTeam.classList.add('eachTeam');
     playerModal!.appendChild(eachTeam);
@@ -354,7 +593,7 @@ function openPositionModal() {
     if (!findDuplicatePlayers(playerInput.value, position)) {
       addPlayer(playerInput.value, position);
     }
-    
+
     positionModal!.classList.add('hidden');
     modalContainer!.classList.add('hidden');
     listPlayers();
@@ -365,7 +604,7 @@ function openPositionModal() {
 
 function handleCloseModal(event: Event) {
   const modalContainer = document.getElementById('modal');
-  
+
   if (event.target === modalContainer || event.target === closeModal) {
     modalContainer!.classList.add('hidden');
   }

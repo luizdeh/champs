@@ -1,50 +1,76 @@
 body {
-    background-color: white;
+    background: white;
     font-family: JetBrains Mono;
+}
+.content {
+    padding: 60px;
 }
 .nav {
     color: grey;
-    background-color: lightgrey;
+    background: lightgrey;
     display:flex;
     flex-direction:row;
     width: 100%;
     height: 60px;
+    top:0;
     justify-content:space-evenly;
-    margin-bottom:20px;
+    margin-bottom:25px;
     overflow:hidden;
     align-items:center;
 }
 .navButton {
     flex:1;
-    padding:10px;
+    padding:17px;
     color: grey;
-    background-color:lightgrey;
+    background:lightgrey;
     font-size: 20px;
     font-weight:bold;
-    /* margin: 10px; */
     text-align:center;
     text-decoration: none;
+    margin:0;
+}
+.navButton:nth-child(1) {
+    font-family: "Font Awesome 5 Free";
+    flex:0.20;
+    padding:20px;
+    transition: transform .2s;
+    transition-timing-function:ease;
+}
+.navButton:nth-child(1):hover {
+    background: transparent;
+    /* font-size-adjust: 20px; */
+    transform: scale(2);
 }
 .navActive {
     color: white;
-    background-color:grey;
+    background:grey;
 }
 .navButton:hover {
     color: grey;
-    background-color:white;
+    background:white;
     cursor:pointer;
 }
+/* .sticky {
+    position: fixed;
+    top: 7px;
+    width: 100%;
+    margin-bottom: 25px;
+}
+.sticky + .content {
+    padding-top: 60px;
+} */
 .teamsMarket {
     border: 1px solid lightgrey;
 }
 .openMarketTeam:hover {
     cursor:pointer;
-    background-color: grey;
+    background: grey;
 }
 
 .hidden {
     display:none;
 }
+
 
 .teamForm {
     display:flex;
@@ -52,75 +78,47 @@ body {
 }
 .teamSubmit {
     flex:0;
-    height: 27px;
-    border: 0px solid;
+    height: 2rem;
+    border: none;
     color:white;
-    background-color:darkgrey;
-    border:1px solid grey;
-    margin-left: 5px;
+    background:darkgrey;
+    border-bottom:1px solid grey;
 }
 
 .teamSubmit:hover {
     color: lighgrey;
-    background-color:grey;
+    background:grey;
     cursor:pointer;
 }
 
 .teamInput {
     flex:1;
-    height:25px;
-    border: 0px solid;
+    height:2rem;
+    border: none;
     margin-bottom:10px;
     border-bottom:1px solid grey;
 }
 
-.playerSubmit {
-    height: 27px;
-    border: 0px solid;
-    color:white;
-    background-color:darkgrey;
-}
-
-.playerSubmit:hover {
-    color: lighgrey;
-    background-color:grey;
-    cursor:pointer;
-
-}
-
-.playerInput {
-    height:25px;
-    border: 0px solid;
-    color: darkgrey;
-    background-color:lightgrey;
-    margin-bottom:10px;
-}
-
-.positionInput {
-    height:25px;
-    width:30px;
-    border:0px solid;
-    border-bottom:1px solid grey;
-}
 .controlButton {
     flex:0.5;
-    background-color:white;
-    color:grey;
-    font-size:12px;
-    border: 0px solid;
+    background:white;
+    color: grey;
+    font-size: 12px;
+    border:0px solid;
     text-align:center;
     padding:10px;
     margin-right: 2px;
+
 }
 .controlButton:hover {
-    background-color:grey;
+    background:grey;
     color:white;
     cursor:pointer;
 }
 .controlButton:disabled {
-    background-color:lightgrey;
+    background:lightgrey;
     color:white;
-    cursor:default;  
+    cursor:default;
 }
 .playersList {
     display:flex;
@@ -202,15 +200,59 @@ body {
     padding:5px;
     margin:5px;
 }
+.showingTeamRoster {
+    border: 0px;
+    background: #eeeeee;
+}
 
 .teamRoster {
-    margin: 10px;
+    border: 0px;
+    background: #eeeeee;
+    margin-bottom: 10px;
     flex-direction: column;
     align-items: left;
     padding: 5px;
-    border: 1px solid lightgrey;
-    border-radius: 10px;
-    background-color: #e0e0e0;
+    background: #eeeeee;
+}
+.playerElement {
+    display:flex;
+    align-items:center;
+    padding:5px;
+    margin-bottom:5px;
+}
+.playerNameHome {
+    flex:1;
+    font-size:14px;
+    padding:5px;
+    text-align:left;
+    color:grey;
+}
+.playerNameAway {
+    flex:1;
+    font-size:14px;
+    text-align:right;
+    color:grey;
+}
+.addRemoveGoal {
+    flex:0.05;
+    text-align:center;
+    font-size:18px;
+    font-weight:bold;
+    border:none;
+    padding:5px;
+}
+.addRemoveGoal:hover {
+    color: lightgrey;
+    background:grey;
+    cursor:pointer;
+}
+.goals {
+    flex:0;
+    text-align:center;
+    font-size:18px;
+    font-weight:bold;
+    border:none;
+    margin:5px;
 }
 .rosterPlayerContainer {
     display: flex;
@@ -238,7 +280,7 @@ body {
 }
 .teamName:hover {
     cursor:pointer;
-    background-color: lightgrey;
+    background: lightgrey;
 }
 .teamAbbr {
     flex:0;
@@ -257,7 +299,7 @@ body {
     margin-left: 8px;
 }
 .listTeam:hover {
-    background-color:lightgrey;
+    background:lightgrey;
     color:white;
     cursor:pointer;
 }
@@ -267,98 +309,133 @@ body {
     margin:10px;
 }
 .eachTeam:hover {
-    background-color:lightgrey;
+    background:lightgrey;
     cursor:pointer;
 }
 
-.roundContainer {
-    display:block;
-    justify-content: stretch;
-    align-items: center;
-    width: 100%;
-    margin-bottom: 5px;
-}
-
-.roundCounter {
-    display:flex;
-    width:52%;
-    justify-content:right;
-    font-size:12px;
-    font-weight:bold;
-    /* margin-left: -100px; */
-}
-
 .container {
-    display:flex;
+    display:block;
     align-items:center;
+    border:1px solid #eeeeee;
+    background-color:#eeeeee;
+    border-radius:10px;
+    margin:.5em;
 }
 
 .gameCounter {
-    flex:1;
-    font-size:8px;
+    flex:0.05;
+    display:flex;
+    flex-direction:column;
     font-weight:bold;
-    /* width:5%; */
+    background: transparent;
+    padding:5px;
+}
+.gameRound {
+    flex:1;
+    color:grey;
+    font-size:.6em;
+    text-align:left;
+    font-weight:bold;
+    /* text-decoration: underline;
+    text-underline-offset: 2px; */
+}
+.gameNumber {
+    flex:1;
+    color:grey;
+    font-size:.75em;
+    text-align:center;
+    font-weight: bold;
+    /* padding:4px; */
 }
 
 .gameContainer {
     display:flex;
     align-items:center;
-    width:96%;
-    background-color:white;
-    border: 1px solid green;
-    margin:5px;
+    background:white;
+    padding:5px;
+    /* border: 2px solid lightgrey; */
+    border-radius: 10px;
 }
 
 .scores {
     display:flex;
+    flex:1;
     align-items:center;
-    justify-content:space-between;
-    width:100%;
 }
 
 .homeTeam {
     flex:2;
-    justify-content:left;
     text-align:left;
-    margin-left: 10px;
+    margin-left: 2em;
+    padding:.75em;
 }
 
 .awayTeam {
     flex:2;
-    justify-content:right;
     text-align:right;
-    margin-right: 10px;
+    margin-right: 2em;
+    padding:.75em;
 }
-
-.homeGoals {
-    flex:0;
-    align-items:center;
-    justify-content:center;
+/* .gameContainerHomeGoals {
+    flex:0.1;
+    border: none;
+    background: #eeeeee;
+    text-align:center;
     width: 25px;
-    margin: 5px;
+    padding: 10px;
+    font-weight: bold;
+    font-size: 1.1em;
+
+} */
+.gameContainerHomeGoals,
+.gameContainerAwayGoals {
+    flex:0.1;
+    border: none;
+    background: #eeeeee;
+    text-align:center;
+    width: 1.5em;
+    padding: .5em;
+    /* font-weight: bold; */
+    font-size: 1.1em;
 
 }
-.awayGoals {
-    flex:0;
-    align-items:center;
-    justify-content:center;
-    width: 25px;
-    margin: 5px;
-}
-
 .scoreButton {
     flex:0;
-    margin-right: 10px;
+    margin: 4px;
+    padding: 8px;
+    border: none;
+    font-size:.7em;
+    font-weight:bold;
+    color:grey;
+    border-radius:8px;
+}
+.scoreButton:hover {
+    background: grey;
+    color:white;
+    cursor:pointer;
+}
+.scoreButton:disabled {
+    background: transparent;
+    color:white;
+    cursor:not-allowed;
+}
+.x {
+    text-align: center;
+    padding:5px;
+    font-size:.8em;
 }
 
 .title {
     display:flex;
-    font-size:18px;
+    font-size:1.2em;
     font-weight:bold;
     color: #474747;
     align-items:center;
     justify-content:space-evenly;
-
+    margin-bottom:2em;
+    background-color: #b8e3f5;
+    padding:.5em;
+    width:100%;
 }
 
 .champsName {
@@ -391,11 +468,423 @@ body {
 
 .modalContent {
     overflow:auto;
-    background-color: #fefefe;
+    background: #fefefe;
     margin: 15% auto;
     padding: 20px;
     border: 1px solid #888;
     width: 25%;
     position: relative;
 }
+.newEditionButton {
+    z-index: 1;
+    bottom: 10px;
+    right: 25px;
+    position: fixed;
+    transition: transform .2s;
+    background: transparent;
+    border: none;
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    font-size: 48px;
+    color:green;
 
+}
+.newEditionButton:disabled {
+    color: #e6e6e6;
+}
+.newEditionButton:hover {
+    cursor:pointer;
+    color:limegreen;
+    transform: scale(1.75)
+}
+.newEditionButton:disabled:hover {
+    cursor:default;
+    color:#e6e6e6;
+}
+.modalEditionName {
+    display: none;
+    position: fixed;
+    bottom: 10px;
+    right: 25px;
+    transition: transform .4s;
+    padding: 15px;
+    background: #eeeeee;
+    border: none;
+    z-index: 9;
+}
+.formEditionName {
+    display:flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.inputEditionName {
+    flex:1;
+    width:100%;
+    padding: 10px;
+    border: none;
+    background: lightgrey;
+    margin-bottom: 10px;
+}
+.submitEditionName {
+    flex:1;
+    background: grey;
+    color: white;
+    font-weight:bold;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 5px;
+    opacity: 0.8;
+}
+.submitEditionName:hover {
+    opacity:1;
+    background:green;
+}
+.closeEditionName {
+    background: grey;
+    color: white;
+    font-weight:bold;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 5px;
+    opacity: 0.8;
+}
+.closeEditionName:hover {
+    background: red;
+}
+.removeFromEditionButton {
+    color:white;
+    background: grey;
+
+}
+.removeFromEditionButton:hover {
+    cursor:pointer;
+    background:whitesmoke;
+    color:grey;
+}
+.toggleEditionList {
+    color: grey;
+    background: #eeeeee;
+    margin-bottom: 5px;
+    border: none;
+    text-align:center;
+    padding: 10px;
+    width:100%;
+    font-size:1.6em;
+    margin-bottom:0.5em;
+}
+.toggleEditionList:hover {
+    cursor:pointer;
+    background:lightgrey;
+    color:white;
+}
+.listOfEditions {
+    display:flex;
+    flex-wrap: wrap;
+    width: 100%;
+    align-items:center;
+    margin-bottom:1em;
+    /* display:flex; */
+    /* flex-direction:row; */
+    /* align-items:center; */
+    /* justify-content:space-evenly; */
+    /* width:100%; */
+    /* margin-top:10px; */
+    /* padding:10px; */
+}
+.editionButton {
+    display:flex;
+    flex:1 0 20%;
+    height:45px;
+    width:0;
+    border-radius: 8px;
+    border: none;
+    margin: 5px;
+    background-color:#eeeeee;
+    color:grey;
+    align-items:center;
+}
+.editionButton:hover {
+    background: grey;
+    color:white;
+    cursor:pointer;
+}
+.editionButtonDate {
+    flex:0;
+    text-align: left;
+    padding: 5px;
+    font-size:.9em;
+    font-weight:bold;
+}
+.editionButtonName {
+    flex:1;
+    text-align: center;
+    font-size:1.2em;
+    font-weight:bold;
+}
+.playerFormFilter {
+    display:flex;
+    margin-bottom:10px;
+    align-items:center;
+}
+.playerForm {
+    flex:2.5;
+    display:flex;
+    align-items:center;
+    width:100%;
+}
+.playerInput {
+    flex:1;
+    height:2rem;
+    border:none;
+    color: grey;
+    background:white;
+    border-bottom:1px solid grey;
+}
+.playerSubmit {
+    flex:0;
+    height:2rem;
+    border: none;
+    color:white;
+    background:darkgrey;
+    border-bottom:1px solid grey;
+}
+
+.playerSubmit:hover {
+    color: lighgrey;
+    background:grey;
+    cursor:pointer;
+}
+
+
+
+/* .positionInput { */
+/*     height:25px; */
+/*     width:30px; */
+/*     border:0px solid; */
+/*     border-bottom:1px solid grey; */
+/* } */
+
+.playerFilter {
+    flex:0.5;
+    display:flex;
+    margin-left:5px;
+    flex-direction:column;
+    align-items:center;
+}
+*,
+*::before,
+*::after {
+        box-sizing: border-box;
+}
+/* :root { */
+/*     --select-border: lightgrey; */
+/*     --select-focus: grey; */
+/*     --select-arrow: var(--select-border); */
+/* } */
+select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    outline: none;
+    border: none;
+    color: grey;
+    width: 10rem;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+.playerFilterTeam {
+    flex:1;
+    margin: 0.1rem;
+    align-items: center;
+}
+.playerFilterPosition {
+    flex:1;
+    margin: 0.1rem;
+    align-items: center;
+}
+.playerFilterClear {
+    flex:0;
+    position:relative;
+    display:inline-block;
+}
+.clearFilters {
+    background: white;
+    color: grey;
+    border:none;
+    font-size:1.5rem;
+}
+.clearFilters:hover {
+    background: grey;
+    color:white;
+    cursor:pointer;
+}
+.tooltip {
+    visibility: hidden;
+    text-align:center;
+    position:absolute;
+    font-size:1.1em;
+    font-weight:bold;
+    color:grey;
+    z-index:1;
+    bottom:15%;
+    left:100%;
+    margin-left:-85px;
+    opacity:0;
+    transition: opacity 0.3s;
+
+}
+.playerFilterClear:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+.gameContainerRosters {
+    display: flex;
+    flex-direction:row;
+}
+.gameContainerHomeRoster,
+.gameContainerAwayRoster {
+    flex:1;
+    font-size:.5em;
+    margin: 5px;
+    padding:5px;
+}
+.tableContainer {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    width:100%;
+    margin-bottom:2em;
+}
+.listedResult {
+    display:flex;
+    align-items:center;
+    padding:.5em;
+    width:100%;
+    font-size: .8em;
+}
+.listedResult:nth-child(even) {
+    background-color: #f0f9fd;
+}
+.listedResult:nth-child(odd) {
+    background: white;
+}
+.edition-result-index {
+    flex:0.5;
+    text-align:left;
+    font-weight:bold;
+}
+.edition-result-name {
+    flex:3;
+    text-align:left;
+}
+.edition-result-line {
+    flex:1;
+    text-align:center;  
+}
+.editionShown {
+    display:flex;
+    flex-direction:column;
+    width:100%;
+}
+.table {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    width:100%;
+}
+.table-header {
+    display:flex;
+    flex-direction:row;
+    width:100%;
+    font-size:.9em;
+    font-weight:bold;
+    align-items:center;
+    /* border-bottom:1px solid lightgrey; */
+}
+.table-header-name {
+    flex:3.5;
+    text-align:center;
+}
+.table-header-items {
+    flex:1;
+    text-align:center;
+}
+.edition-player-stats-table {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    width:100%;
+}
+.edition-player-stats-header {
+    display:flex;
+    flex-direction:row;
+    width:100%;
+    font-size:.9em;
+    font-weight:bold;
+    align-items:center;
+    /* border-bottom:1px solid lightgrey; */
+}
+.edition-player-stats-header-stat {
+    flex:1;
+    text-align:center;
+    
+}
+.playerStatsContainer {
+    display:flex;
+    flex-direction:row;
+    margin-bottom:2em;
+    /* padding:1em; */
+}
+.goalContainer {
+    display:flex;
+    flex:1;
+    flex-direction:column;
+    align-items:center;
+    width:100%;
+}
+.assistContainer {
+    display:flex;
+    flex:1;
+    flex-direction:column;
+    align-items:center;
+    width:100%;
+}
+.playerStatContainer {
+    flex:1;
+    display:flex;
+    flex-direction:row;
+    align-items:baseline;
+    font-size: .8em;
+    width:100%;
+    padding:.5em;
+}
+.playerStatIndex {
+    flex:1;
+    text-align:center;
+    /* font-weight:bold; */
+}
+.playerStatName {
+    flex:2;
+    text-align:left;
+    /* font-size:1.1em; */
+}
+.playerStatTeam {
+    flex:1;
+    text-align:right;
+}
+.playerStatCount {
+    flex:1;
+    text-align:center;
+    /* font-size:1.2em; */
+}
+.playerStatContainer:nth-child(even) {
+    /* background-color: rgb(228, 253, 236) */
+    background-color: #f0f9fd
+}
