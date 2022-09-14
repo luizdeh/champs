@@ -8,7 +8,7 @@ import {
   formSubmit,
   emptyMessage,
 } from './app';
-import { listTeams, getTeamAbbr } from './teams';
+import { listTeams, getTeamAbbr, loadLogo } from './teams';
 import { position, positionIndex, colors, teamsPalette } from './appConfig';
 
 const players = document.getElementById('players');
@@ -389,19 +389,22 @@ function renderPlayerContainer(id: string) {
 
   if (hasTeam(id)) {
     playerTeam.innerHTML = `${teamAbbr.toUpperCase()}`;
+    playerTeam.style.color = colors.teamsPalette[teamAbbr.toUpperCase()].secondary;
+    playerTeam.style.backgroundColor = colors.teamsPalette[teamAbbr.toUpperCase()].primary;
   } else {
     playerTeam.innerHTML = `-`;
   }
 
-  let colorsExists = Object.values(teamsPalette).includes(teamAbbr);
-  if (colorsExists) {
-    playerTeam.style.color = colors.teamsPalette[teamAbbr].primary;
-    playerTeam.style.backgroundColor = colors.teamsPalette[teamAbbr].secondary;
-  }
+  // let colorsExists = Object.values(teamsPalette).includes(teamAbbr);
+  // console.log(colorsExists);
+  // if (colorsExists) {
+
+  // }
 
   playerContainer.appendChild(playerPosition);
   playerContainer.appendChild(playerName);
   playerContainer.appendChild(playerTeam);
+  // if (teamAbbr) playerContainer.appendChild(loadLogo(teamAbbr));
 
   return playerContainer;
 }
@@ -470,7 +473,7 @@ function listPlayers() {
 
   // Append the empty message if there's no content
   if (playersList && empty()) {
-    emptyMessage(playersList);
+    emptyMessage(playersList,'No players found...');
   }
 
   if (playersList && !empty()) {
@@ -478,6 +481,7 @@ function listPlayers() {
     resetPlayersList();
     listTeams();
   }
+
 }
 
 function findDuplicatePlayers(name: string, position: string) {
@@ -592,6 +596,8 @@ function openPositionModal() {
   function chooseAndClose(position: string) {
     if (!findDuplicatePlayers(playerInput.value, position)) {
       addPlayer(playerInput.value, position);
+    playerInput.focus()
+
     }
 
     positionModal!.classList.add('hidden');

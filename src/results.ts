@@ -1,44 +1,30 @@
 import { Game, dbGames, dbEditions, Edition, createElement, dbPlayers, Player } from './app';
-import { getTeamName, getTeamAbbr } from './teams';
+import { getTeamName, getTeamAbbr, loadLogo } from './teams';
 
-const c = console.log.bind(console);
-
-const ed = '8a7b308b-53ac-4b92-8ff3-aa2cfd0efa6b';
-const ed1 = '8d6a57a9-9702-4fd6-b40f-c8b757a4e92c'
-const ed2 = '629e4448-e671-4746-bc87-5aaacf0fc2ae'
-const team1 = "c18c11d6-3a72-4868-9e13-9f5cca029be4"
-const team2 = "44359fe0-bd0a-4240-a9a2-0d842c14bf1c"
-const team3 = "053da6dd-1ea0-4404-929e-7cb0e1bf5c43"
-const team4 = "df2c0a96-e1b2-44db-8e1d-86de50618ebe"
-
-
-
-function checkEditionComplete(id: string) {
-  const games = dbGames().filter((game: Game) => game.edition.id === id);
-  let complete = true;
-  games.forEach((game: Game) => {
-    if (!game.teams.home.goals || !game.teams.away.goals) {
-      complete = false;
-    }
-  });
-  return complete;
-}
+// function checkEditionComplete(id: string) {
+//   const games = dbGames().filter((game: Game) => game.edition.id === id);
+//   let complete = true;
+//   games.forEach((game: Game) => {
+//     if (!game.teams.home.goals || !game.teams.away.goals) {
+//       complete = false;
+//     }
+//   });
+//   return complete;
+// }
 
 // check if the game is saved with goals pushed to the DB
-function gameComplete(id: string) {
-  const game = findGame(id);
-  if (game.teams.away.goals && game.teams.home.goals) {
-    return true;
-  } else {
-    return false;
-  }
-};
+// function gameComplete(id: string) {
+//   const game = findGame(id);
+//   if (game.teams.away.goals && game.teams.home.goals) {
+//     return true;
+//   } else {
+//     return false;
+//   }
+// };
 
 // find teams in an edition
 function findTeamsInEdition(id: string) {
-  const edition = dbEditions().find(
-    (item: Edition) => item.id === id,
-  ).editionTeams;
+  const edition = dbEditions().find((item: Edition) => item.id === id).editionTeams;
   let teams: string[] = [];
   edition.forEach((team: any) => {
     teams.push(team.teamId);
@@ -47,10 +33,9 @@ function findTeamsInEdition(id: string) {
 }
 
 // find the game object using the game's ID
-function findGame(id: string) {
-  const game = dbGames().find((game: Game) => game.id === id);
-  return game;
-}
+// function findGame(id: string) {
+//   return dbGames().find((game: Game) => game.id === id);
+// }
 
 function getEditionResults(id: string) {
   const results: any[] = [];
@@ -114,9 +99,6 @@ function getEditionResults(id: string) {
   });
   return results;
 }
-
-
-
 
 function teamResults(id: string, editionId: string) {
   const results = getEditionResults(editionId);
@@ -224,7 +206,7 @@ function tiebreaker(editionId: string, team1: string, team2: string) {
 function createResultsTable() {
   const table = createElement({ tag: 'table', classes: 'table'});
   const colgroups = createElement({ tag: 'colgroup', classes: 'results-table-colgroup'});
-  colgroups.setAttribute('span', '11');
+  colgroups.setAttribute('span', '12');
   const headerRow = createElement({ tag: 'tr', classes: 'table-header'});
   const team = createElement({ tag: 'th', classes: 'table-header-name'});
   const points = createElement({ tag: 'th', classes: 'table-header-items'})
@@ -236,7 +218,9 @@ function createResultsTable() {
   const goalsAgainst = createElement({ tag: 'th', classes: 'table-header-items'})
   const netGoals = createElement({ tag: 'th', classes: 'table-header-items'})
   const pointsPercentage = createElement({ tag: 'th', classes: 'table-header-items'})
-  
+
+  team.setAttribute('colspan', '3')
+
   team.innerText = `TEAM`;
   points.innerText = `P`
   games.innerText = `G`
@@ -270,6 +254,7 @@ export function renderEditionResults(id: string) {
   results.forEach((team, index) => {
     const item = createElement({ tag: 'tr', classes: 'listedResult' });
     const place = createElement({ tag: 'td', classes: 'edition-result-index' });
+    const logo = createElement({ tag: 'td', classes: 'edition-result-logo'})
     const name = createElement({ tag: 'td', classes: 'edition-result-name' })
     const points = createElement({ tag: 'td', classes: 'edition-result-line' })
     const games = createElement({ tag: 'td', classes: 'edition-result-line' })
@@ -280,8 +265,13 @@ export function renderEditionResults(id: string) {
     const goalsAllowed = createElement({ tag: 'td', classes: 'edition-result-line' })
     const netGoals = createElement({ tag: 'td', classes: 'edition-result-line' })
     const percentage = createElement({ tag: 'td', classes: 'edition-result-line' })
-  
+
+    const abbr = getTeamAbbr(team.teamId).toUpperCase()
+
+
     item.appendChild(place);
+    item.appendChild(logo)
+    logo.appendChild(loadLogo(abbr))
     item.appendChild(name)
     item.appendChild(points)
     item.appendChild(games)
@@ -293,9 +283,9 @@ export function renderEditionResults(id: string) {
     item.appendChild(netGoals)
     item.appendChild(percentage)
     table.appendChild(item)
-  
+
     place.innerText = `${index + 1}.`
-    name.innerText = `${getTeamName(team.teamId)}`
+    name.innerText = `${getTeamName(team.teamId).toUpperCase()}`
     points.innerText = `${team.Points}`
     games.innerText = `${team.Games}`
     wins.innerText = `${team.Wins}`
@@ -313,15 +303,9 @@ export function renderEditionResults(id: string) {
 
 function getPlayerName(id: string) {
   const players = dbPlayers().find((player: Player) => player.id === id);
-  return players.name
+  let name = players ? players.name : 'OWN GOAL'
+  return name
 }
-
-// function getPlayerTeam(id: string) {
-//   const player = 
-//   const edition = dbEditions().editionTeams.find((player: Player) => player.id === id)
-//   return players.team
-// }
-
 
 function goalScorers(id: string) {
   const edition = getEditionResults(id)
@@ -348,7 +332,7 @@ function goalScorers(id: string) {
   topScorers.sort((a: any, b: any) => b.count - a.count)
   return topScorers;
 }
- 
+
 function goalAssisters(id: string) {
   const edition = getEditionResults(id)
   let assisters: any[] = [];
@@ -380,10 +364,10 @@ function goalAssisters(id: string) {
 const getPlayerEditionTeam = (editionId: string, playerId: string) => {
   const edition = dbEditions().find((edition: Edition) => edition.id === editionId)
   const teams = edition.editionTeams
-  let name
+  let name: string
   teams.forEach((team: any) => {
     let teamId = team.teamId
-    team.roster.forEach((player) => {
+    team.roster.forEach((player: Edition) => {
       if (player.id === playerId) {
         return name = teamId
       }
@@ -393,7 +377,7 @@ const getPlayerEditionTeam = (editionId: string, playerId: string) => {
   }
 
 function createPlayerStatsTable(type: string) {
-  const table = createElement({ tag: 'table', classes: 'table' });
+  const table = createElement({ tag: 'table', classes: 'edition-player-stats-table' });
   const colgroups = createElement({ tag: 'colgroup' });
   colgroups.setAttribute('span', '4')
   const headerRow = createElement({ tag: 'tr', classes: 'edition-player-stats-header' });
@@ -407,20 +391,15 @@ function createPlayerStatsTable(type: string) {
   headerRow.appendChild(stat);
   table.appendChild(headerRow);
 
-  // name.innerText = `PLAYER`
-  // team.innerText = `TEAM`
-  if (type === 'G') {
-    stat.innerText = `GOALS`
-  } else {
-    stat.innerText = `ASSISTS`
-  }
+  stat.innerText = type === 'G' ? `GOALS` : `ASSISTS`
 
   return table
 }
 
-
 export function renderPlayerStats(id: string) {
+
   const container = createElement({ tag: 'div', classes: 'playerStatsContainer'});
+  container.classList.add('hidden')
   const goalContainer = createElement({ tag: 'div', classes: 'goalContainer'});
   const goalsTable = createPlayerStatsTable('G');
   const assistContainer = createElement({ tag: 'div', classes: 'assistContainer'});
@@ -428,23 +407,28 @@ export function renderPlayerStats(id: string) {
   const goals = goalScorers(id);
   const assists = goalAssisters(id);
   goals.forEach((goal, index) => {
+    if (index <= 9) {
     const playerGoalContainer = createElement({ tag: 'tr', classes: 'playerStatContainer'});
     const idx = createElement({ tag: 'td', classes: 'playerStatIndex'});
     const name = createElement({ tag: 'td', classes: 'playerStatName'});
     const team = createElement({ tag: 'td', classes: 'playerStatTeam'});
     const count = createElement({ tag: 'td', classes: 'playerStatCount'});
     idx.innerText = `${index+1}.`;
-    name.innerText = `${getPlayerName(goal.name).toUpperCase()}`;
-    team.innerText = `( ${getPlayerEditionTeam(id,goal.name)} )`;
+    const playerName = getPlayerName(goal.name)
+    if (playerName) name.innerText = `${playerName.toUpperCase()}`;
+    const playerTeam = getPlayerEditionTeam(id, goal.name)
+    if (playerTeam) team.innerText = `( ${playerTeam.toUpperCase()} )`;
     count.innerText = `${goal.count}`;
     playerGoalContainer.appendChild(idx);
     playerGoalContainer.appendChild(name);
     playerGoalContainer.appendChild(team);
     playerGoalContainer.appendChild(count);
     goalsTable.appendChild(playerGoalContainer);
-    })
+    }
+  })
   assists.forEach((assist, index) => {
     if (assist.name !== '') {
+      if (index <= 10) {
     const playerAssistContainer = createElement({ tag: 'tr', classes: 'playerStatContainer'});
     const idx = createElement({ tag: 'td', classes: 'playerStatIndex'});
     const name = createElement({ tag: 'td', classes: 'playerStatName'});
@@ -452,13 +436,14 @@ export function renderPlayerStats(id: string) {
     const count = createElement({ tag: 'td', classes: 'playerStatCount'});
     idx.innerText = `${index}.`;
     name.innerText = `${getPlayerName(assist.name).toUpperCase()}`;
-    team.innerText = `( ${getPlayerEditionTeam(id,assist.name)} )`;
+    team.innerText = `( ${getPlayerEditionTeam(id,assist.name).toUpperCase()} )`;
     count.innerText = `${assist.count}`;
     playerAssistContainer.appendChild(idx);
     playerAssistContainer.appendChild(name);
     playerAssistContainer.appendChild(team);
     playerAssistContainer.appendChild(count);
     assistsTable.appendChild(playerAssistContainer);
+      }
     }
   })
   goalContainer.appendChild(goalsTable);
