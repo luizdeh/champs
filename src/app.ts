@@ -58,11 +58,6 @@ export type TeamPairings = {
   away: string | null;
 }
 
-// export type currentState = {
-//     id:
-// }
-// example: save current editionlist and wipe when edition is created
-
 const TeamsDB = 'teams';
 const PlayersDB = 'players';
 const GamesDB = 'games';
@@ -99,13 +94,22 @@ export function saveEdition(content: Edition) {
   return localStorage.setItem(EditionsDB, JSON.stringify(content));
 }
 
+const players = JSON.stringify(localStorage.players)
+const teams = JSON.stringify(localStorage.teams)
+const editions = JSON.stringify(localStorage.editions)
+const games = JSON.stringify(localStorage.games)
+
+const storages = [ teams, players, editions, games ]
+
+storages.forEach((item) => console.log(item))
+
 export function formSubmit(event: SubmitEvent) {
   event.preventDefault();
 }
 
-export function emptyMessage(div: HTMLElement) {
+export function emptyMessage(div: HTMLElement, message: string) {
   const emptyMessage = document.createElement('p');
-  emptyMessage.innerText = `There are currently NO TEAMS registered!`;
+  emptyMessage.innerHTML = message;
   div.appendChild(emptyMessage);
 }
 
@@ -175,10 +179,9 @@ Object.keys(navButtons).forEach((key) => {
 //   }
 // }
 
-const dash = document.getElementById('dash');
+// const dash = document.getElementById('dash');
 
-if (dash)
-  dash.innerHTML = `
-criar mercado para proposição de trocas<br>
-revisar criação de campeonato visando montar tabelas que não se perdem no refresh
-`;
+// if (dash)
+//   dash.innerHTML = `C H A M P S
+// é melhor jogar do que esperar
+//   `;

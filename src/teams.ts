@@ -10,7 +10,7 @@ import {
   createElement
 } from './app';
 import { generateTeamsList, toggleNewEditionButton } from './editions';
-import { colors, teamsPalette } from './appConfig';
+import { colors, teamsPalette, logos } from './appConfig';
 
 
 const teams = document.getElementById('teams');
@@ -54,6 +54,14 @@ if (teamInput && teamSubmit) teamSubmit.addEventListener('click', () => addTeam(
 
 listTeams()
 
+export function loadLogo(team: string) {
+  const teamLogo = createElement({tag:'div',classes:'teamLogo'}) as HTMLImageElement
+  let img = new Image()
+  img.src = `${logos[`${team}`]}` ;
+  teamLogo.appendChild(img);
+  return teamLogo;
+}
+
 function renderTeamContainer(id: string) {
   const teamObject = dbTeams().find((team: Team) => team.id === id);
 
@@ -63,7 +71,7 @@ function renderTeamContainer(id: string) {
 
   teamName.innerHTML = `${teamObject.name.toUpperCase()}`;
   teamAbbr.innerHTML = `${teamObject.abbr.toUpperCase()}`;
-
+  
   let colorsExists = Object.values(teamsPalette).includes(teamObject.abbr);
   if (colorsExists) {
     teamAbbr.style.color = colors.teamsPalette[teamObject.abbr].primary;
@@ -73,6 +81,7 @@ function renderTeamContainer(id: string) {
 
   teamName.addEventListener('click', () => toggleTeamRoster(id));
 
+  teamContainer.appendChild(loadLogo(teamObject.abbr.toUpperCase()));
   teamContainer.appendChild(teamName);
   teamContainer.appendChild(teamAbbr);
 
@@ -182,9 +191,7 @@ export function getTeamName(id: string) {
         .map((name: Team) => name.name)[0];
 }
 export function getTeamAbbr(id: string) {
-    return dbTeams()
-        .filter((team: Team) => team.id === id)
-        .map((name: Team) => name.abbr)[0];
+  return dbTeams().filter((team: Team) => team.id === id).map((name: Team) => name.abbr)[0];
 }
 
 //list team
@@ -195,7 +202,7 @@ export function listTeams() {
     const empty = () => dbTeams().length === 0 || undefined;
 
     if (teamsList && empty()) {
-        emptyMessage(teamsList);
+        emptyMessage(teamsList,'There are currently no teams in the database.');
     }
 
     if (teamsList && !empty()) {

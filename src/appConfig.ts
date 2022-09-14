@@ -32,10 +32,19 @@ export const positionIndex = {
     }
 }
 export const teamsPalette = {
+ADL: 'ADL',
 AFD: 'AFD',
-ALL: 'ALL',
-DTU: 'DTU',
-DDP: 'DDP',
+BRV: 'BRV',
+CBJ: 'CBJ',
+CXF: 'CXF',
+FFC: 'FFC',
+GDN: 'GDN',
+MFT: 'MFT',
+MJG: 'MJG',
+MRN: 'MRN',
+NFC: 'NFC',
+PCM: 'PCM',
+PTD: 'PTD',
 }
 
 export const colors = {
@@ -55,23 +64,74 @@ export const colors = {
         [position.CA]: "#fddfdf",
     },
     teamsPalette: {
+        [teamsPalette.ADL]: {
+            primary: '#205caa',
+            secondary: '#ffffff',
+        },
         [teamsPalette.AFD]: {
-            primary: 'darkgreen',
-            secondary: 'limegreen'
+            primary: '#087039',
+            secondary: '#e6f0eb',
         },
-        [teamsPalette.ALL]: {
-            primary: 'pink',
-            secondary: 'brown'
+        [teamsPalette.BRV]: {
+            primary: 'black',
+            secondary: 'white',
         },
-        [teamsPalette.DDP]: {
-            primary: '#e6e6e6',
-            secondary: 'grey'
+        [teamsPalette.CBJ]: {
+            primary: '#FFBF0F',
+            secondary: 'black',
         },
-        [teamsPalette.DTU]: {
-            primary: 'navyblue',
-            secondary: 'lightblue'
-        }
+        [teamsPalette.CXF]: {
+            primary: '#006B2D',
+            secondary: 'white',
+        },
+        [teamsPalette.FFC]: {
+            primary: 'white',
+            secondary: '#FA1518',
+        },
+        [teamsPalette.GDN]: {
+            primary: '#1B120E',
+            secondary: '#D1A359',
+        },
+        [teamsPalette.MFT]: {
+            primary: '#76BCD4',
+            secondary: 'white',
+        },
+        [teamsPalette.MJG]: {
+            primary: 'white',
+            secondary: '#28782C',
+        },
+        [teamsPalette.MRN]: {
+            primary: '#2F2F2F',
+            secondary: '#E7181C',
+        },
+        [teamsPalette.NFC]: {
+            primary: '#D4D4D4',
+            secondary: 'black',
+        },
+        [teamsPalette.PCM]: {
+            primary: '#2860B1',
+            secondary: '#EA171A',
+        },
+        [teamsPalette.PTD]: {
+            primary: '#F47D20',
+            secondary: 'black',
+        },
     }
 }
-// criar paleta de cores,
-// array de objetos: primary e secondary
+export const logos = {
+    [teamsPalette.ADL]: 'https://imgur.com/MCHMhLx.png',
+    [teamsPalette.AFD]: 'https://imgur.com/HkaBMak.png',
+    [teamsPalette.BRV]: 'https://imgur.com/jEVNVlX.png',
+    [teamsPalette.CBJ]: 'https://imgur.com/IrxLAE2.png',
+    [teamsPalette.CXF]: 'https://imgur.com/CCz3Ve3.png',
+    [teamsPalette.FFC]: 'https://imgur.com/z3DWae6.png',
+    [teamsPalette.GDN]: 'https://imgur.com/agUkCdM.png',
+    [teamsPalette.MFT]: 'https://imgur.com/hgHQJXq.png',
+    [teamsPalette.MJG]: 'https://imgur.com/YFhAVbq.png',
+    [teamsPalette.MRN]: 'https://imgur.com/pgkYGtW.png',
+    [teamsPalette.NFC]: 'https://imgur.com/w7vkNyJ.png',
+    [teamsPalette.PCM]: 'https://imgur.com/Pim2mhk.png',
+    [teamsPalette.PTD]: 'https://imgur.com/hDvSMwT.png',
+}
+// cc https://imgur.com/i3pYuBL.png
+// sulminas https://imgur.com/7RBx4uq.png

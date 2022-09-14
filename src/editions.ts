@@ -335,13 +335,13 @@ function renderGameContainer(gameId: string, game: Game) {
     scoreButton.disabled = true;
   }
 
-  gameContainer.addEventListener('click', () => toggleTeamRoster(game.id));
+  gameContainer.addEventListener('click', (event) => toggleTeamRoster(event, game.id));
 
   return container;
 }
 
 // function to toggle the rosters of the teams in a game container (calls the renderer)
-function toggleTeamRoster(id: string) {
+function toggleTeamRoster(event, id: string) {
   const container = document.getElementById(id);
   const gameRosters = container?.getElementsByClassName(
     'gameContainerRosters',
@@ -352,16 +352,21 @@ function toggleTeamRoster(id: string) {
   const awayTeamRoster = gameRosters?.getElementsByClassName(
     'gameContainerAwayRoster',
   )[0];
+  const gameContainerAwayGoals = container?.getElementsByClassName('gameContainerAwayGoals')[0];
+  const gameContainerHomeGoals = container?.getElementsByClassName('gameContainerHomeGoals')[0];
+  const scoreButton = container?.getElementsByClassName('scoreButton')[0];
+
+  // salvar o conteudo do home e do away (os jogadores que fizeram o gol ou deram assistencia) numa variavel (aka state)
+  // quando a div é escondida e depois re-colocada, colocar o conteudo da variavel no home e no away
 
   if (gameRosters) {
-    if (gameRosters.classList.contains('hidden')) {
+    renderGameRoster(id);
+
+    if (gameRosters.classList.contains('hidden') && event.target !== scoreButton) {
       gameRosters.classList.remove('hidden');
       homeTeamRoster?.classList.remove('hidden');
       awayTeamRoster?.classList.remove('hidden');
-      renderGameRoster(id);
-    } else {
-      if (homeTeamRoster) homeTeamRoster.innerHTML = '';
-      if (awayTeamRoster) awayTeamRoster.innerHTML = '';
+    } else if (event.target !== gameContainerAwayGoals && event.target !== gameContainerHomeGoals && event.target !== scoreButton && !gameRosters?.classList.contains('hidden')) {
       gameRosters.classList.add('hidden');
       homeTeamRoster?.classList.add('hidden');
       awayTeamRoster?.classList.add('hidden');
@@ -394,10 +399,10 @@ function renderGameRoster(id: string) {
   const homers = createElement({ tag: 'ol', classes: 'homeList' }) as Element;
   const outsiders = createElement({ tag: 'ol', classes: 'awayList' }) as Element;
 
-  const renderSelectOptions = (id: string, name: string, position: string) => {
+  const renderSelectOptions = (id: string, name: string) => {
     const playerSelectOption = document.createElement('option');
     playerSelectOption.value = id;
-    playerSelectOption.innerText = `${position.toUpperCase()} . ${name.toUpperCase()}`;
+    playerSelectOption.innerText = `${name.toUpperCase()}`;
     return playerSelectOption;
   };
 
@@ -417,6 +422,10 @@ function renderGameRoster(id: string) {
     emptyAssistSelection.selected = true;
     emptyAssistSelection.disabled = true;
 
+    const ownGoalSelection = document.createElement('option');
+    ownGoalSelection.innerText = `own goal`;
+    ownGoalSelection.value = `own goal`;
+
     const listNumbers = document.createElement('li');
     listNumbers.classList.add('listNumbers');
 
@@ -435,7 +444,7 @@ function renderGameRoster(id: string) {
     if (field === homefield) {
       Object.values(home!).forEach((player: Player) => {
         playerGoal.appendChild(
-          renderSelectOptions(player.id, player.name, player.position),
+          renderSelectOptions(player.id, player.name)
         );
       });
       if (playerGoal) {
@@ -446,35 +455,23 @@ function renderGameRoster(id: string) {
           Object.values(home!).forEach((player: Player) => {
             if (goalScorerId !== player.id) {
               playerAssist.appendChild(
-                renderSelectOptions(player.id, player.name, player.position),
-              );
-            }
-            playerAssist.disabled = false;
-          });
-        };
-      }
-      if (playerAssist) {
-        playerAssist.onchange = (e: any) => {
-          const assistId = e.target.value;
-          playerGoal.innerHTML = '';
-          playerGoal.appendChild(emptyPlayerSelection);
-          Object.values(home!).forEach((player: Player) => {
-            if (assistId !== player.id) {
-              playerGoal.appendChild(
-                renderSelectOptions(player.id, player.name, player.position),
+                renderSelectOptions(player.id, player.name),
               );
             }
           });
+          playerAssist.disabled = false;
         };
       }
+      playerGoal.appendChild(ownGoalSelection);
       listNumbers?.appendChild(playerGoal);
       listNumbers?.appendChild(playerAssist);
       return listNumbers;
     }
+
     if (field === awayfield) {
       Object.values(away!).forEach((player: Player) => {
         playerGoal.appendChild(
-          renderSelectOptions(player.id, player.name, player.position),
+          renderSelectOptions(player.id, player.name),
         );
       });
       if (playerGoal) {
@@ -485,38 +482,26 @@ function renderGameRoster(id: string) {
           Object.values(away!).forEach((player: Player) => {
             if (goalScorerId !== player.id) {
               playerAssist.appendChild(
-                renderSelectOptions(player.id, player.name, player.position),
+                renderSelectOptions(player.id, player.name),
               );
             }
             playerAssist.disabled = false;
           });
         };
       }
-      if (playerAssist) {
-        playerAssist.onchange = (e: any) => {
-          const assistId = e.target.value;
-          playerGoal.innerHTML = '';
-          playerGoal.appendChild(emptyPlayerSelection);
-          Object.values(away!).forEach((player: Player) => {
-            if (assistId !== player.id) {
-              playerGoal.appendChild(
-                renderSelectOptions(player.id, player.name, player.position),
-              );
-            }
-          });
-        };
-      }
+      playerGoal.appendChild(ownGoalSelection);
       listNumbers?.appendChild(playerGoal);
       listNumbers?.appendChild(playerAssist);
       return listNumbers;
     }
   };
-
+  // 
   // colocar um listener no onKeyUp para sempre renderizar o conteudo do homeRoster ou away Roster
   homeGoals.onkeyup = (e: any) => {
     homeScore = e.target.value;
 
-    homers.innerHTML = '';
+    homeTeamRoster.innerHTML = '';
+    homers.innerHTML = ''
 
     for (let index = 1; index <= homeScore; index++) {
       let homePlayers = renderPlayer(homefield);
@@ -529,6 +514,7 @@ function renderGameRoster(id: string) {
 
     awayTeamRoster.classList.remove('hidden');
 
+    awayTeamRoster.innerHTML = '';
     outsiders.innerHTML = '';
 
     for (let index = 1; index <= awayScore; index++) {
@@ -596,7 +582,7 @@ function addGame(gameId: string) {
 
   const awayGoalScorer = Array.from(awayList?.querySelectorAll(`.playerStatsSelect[data-player-goal-select]`) as NodeListOf<HTMLSelectElement>);
   const awayGoalAssister = Array.from(awayList?.querySelectorAll(`.playerStatSelect[data-player-assist-select]`) as NodeListOf<HTMLSelectElement>);
-
+  
   let homeScorers: string[] = [];
   homeGoalScorer.forEach((item) => {
     if (item.options[item.selectedIndex].value !== '0') {
@@ -606,7 +592,7 @@ function addGame(gameId: string) {
       }
     }
   });
-
+  
   let homeAssisters: string[] = [];
   homeGoalAssister.forEach((item) => {
     let assistId = item.selectedOptions[0].value;
@@ -859,12 +845,16 @@ teams?.appendChild(modalEditionName);
 if (formEditionName) formEditionName.onsubmit = formSubmit;
 
 // create the clickable 'banner' that renders the list of editions
-const toggleEditionList = document.createElement('button');
-toggleEditionList.classList.add('toggleEditionList');
-toggleEditionList.innerHTML = `LIST OF CHAMPS`;
-toggleEditionList.id = 'toggleEditionList';
-toggleEditionList.addEventListener('click', () => showHideEditionList());
-champs?.appendChild(toggleEditionList);
+function loadIcon() {
+  const logo = createElement({tag:'div',classes:'icon'}) as HTMLImageElement
+  let img = new Image()
+  img.src = 'https://imgur.com/7RBx4uq.png' ;
+  logo.appendChild(img);
+  return logo;
+}
+const editionsToggle = createElement({tag:'div',classes:'editionsToggle'}) as HTMLDivElement;
+editionsToggle.appendChild(loadIcon()).addEventListener('click', () => showHideEditionList());
+champs?.appendChild(editionsToggle);
 
 // create the div that contains the list of editions
 const listOfEditions = document.createElement('div');
