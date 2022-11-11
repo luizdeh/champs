@@ -1,4 +1,4 @@
-import { Game, dbGames, dbEditions, Edition, createElement, dbPlayers, Player } from './app';
+import { Game, dbGames, dbEditions, Edition, createElement, dbPlayers, Player, isComplete } from './app';
 import { getTeamName, getTeamAbbr, loadLogo } from './teams';
 
 // function checkEditionComplete(id: string) {
@@ -23,7 +23,7 @@ import { getTeamName, getTeamAbbr, loadLogo } from './teams';
 // };
 
 // find teams in an edition
-function findTeamsInEdition(id: string) {
+export function findTeamsInEdition(id: string) {
   const edition = dbEditions().find((item: Edition) => item.id === id).editionTeams;
   let teams: string[] = [];
   edition.forEach((team: any) => {
@@ -144,12 +144,16 @@ function teamResults(id: string, editionId: string) {
     NetGoals: netGoals,
     PointsPercentage: percentage,
     Tiebreaker: 0,
+    RankingPoints: 0,
+    Champion: 0,
+    TopScorer: 0,
+    Participation: 1
   };
 
   return result;
 };
 
-function editionTable(id: string) {
+export function editionTable(id: string) {
   const edition = findTeamsInEdition(id)
   const results: any[] = [];
   edition.forEach((team: string) => {
@@ -175,6 +179,14 @@ function editionTable(id: string) {
     }
   })
   results.sort((a, b) => b.Points - a.Points || b.Tiebreaker - a.Tiebreaker || b.Wins - a.Wins || b.NetGoals - a.NetGoals)
+  results.forEach((item,index) => {
+    if (index === 0) {
+      item.RankingPoints = results.length + 1
+      item.Champion = 1
+    } else {
+      item.RankingPoints = results.length - index
+    }
+  })
   return results
 }
 
@@ -268,7 +280,6 @@ export function renderEditionResults(id: string) {
 
     const abbr = getTeamAbbr(team.teamId).toUpperCase()
 
-
     item.appendChild(place);
     item.appendChild(logo)
     logo.appendChild(loadLogo(abbr))
@@ -301,7 +312,7 @@ export function renderEditionResults(id: string) {
   return tableAndGoals
 }
 
-function getPlayerName(id: string) {
+export function getPlayerName(id: string) {
   const players = dbPlayers().find((player: Player) => player.id === id);
   let name = players ? players.name : 'OWN GOAL'
   return name
@@ -309,6 +320,7 @@ function getPlayerName(id: string) {
 
 function goalScorers(id: string) {
   const edition = getEditionResults(id)
+  if (!edition) return ''
   let scorers: any[] = [];
   edition.forEach((game: any) => {
     game.HomeScorers.forEach((scorer: any) => {
@@ -318,7 +330,7 @@ function goalScorers(id: string) {
       scorers.push(scorer.goal);
     })
   })
-  let count = scorers.reduce(function(acc, curr) {
+  let count = scorers.reduce((acc, curr) => {
     return acc[curr] ? ++acc[curr] : (acc[curr] = 1),
     acc
   } , {})
@@ -329,9 +341,38 @@ function goalScorers(id: string) {
       count: count[key]
     })
   }
-  topScorers.sort((a: any, b: any) => b.count - a.count)
-  return topScorers;
+  const sorted = topScorers.sort((a: any, b: any) => b.count - a.count)
+  sorted.forEach((item) => {
+    const teamName = getPlayerEditionTeam(id, item.name)
+    item.teamName = teamName
+  })
+  return sorted;
 }
+
+// let scorersObj = () => {
+//   const ed = dbEditions()
+//   ed.forEach((item:Edition) => {
+//     const scores = goalScorers(item.id)
+//     return scores 
+//       ? addTeamToGoalScorer(item.id) 
+//       : null
+//   })
+//   console.log(ed)
+//   return ed
+// }
+// scorersObj()
+
+// function addTeamToGoalScorer(id:string) {
+  // const scores = goalScorers(id)
+  // return scores.forEach((item) => {
+  //   let teamId = ''
+  //   item.name === 'own goal'
+  //     ? teamId = ''
+  //     : teamId = getPlayerEditionTeam(id, item.name)
+  //   return item = {...item, teamId }
+  // })
+// }
+
 
 function goalAssisters(id: string) {
   const edition = getEditionResults(id)
@@ -361,7 +402,7 @@ function goalAssisters(id: string) {
 }
 
 // function to find player's team in this edition
-const getPlayerEditionTeam = (editionId: string, playerId: string) => {
+function getPlayerEditionTeam(editionId: string, playerId: string) {
   const edition = dbEditions().find((edition: Edition) => edition.id === editionId)
   const teams = edition.editionTeams
   let name: string
@@ -373,7 +414,7 @@ const getPlayerEditionTeam = (editionId: string, playerId: string) => {
       }
     })
   })
-  return getTeamAbbr(name)
+  return name
   }
 
 function createPlayerStatsTable(type: string) {
@@ -404,48 +445,52 @@ export function renderPlayerStats(id: string) {
   const goalsTable = createPlayerStatsTable('G');
   const assistContainer = createElement({ tag: 'div', classes: 'assistContainer'});
   const assistsTable = createPlayerStatsTable('A');
-  const goals = goalScorers(id);
+  const goals = goalScorers(id) 
   const assists = goalAssisters(id);
-  goals.forEach((goal, index) => {
+  if (goals) {
+  goals.forEach((goal, index) => { 
     if (index <= 9) {
-    const playerGoalContainer = createElement({ tag: 'tr', classes: 'playerStatContainer'});
-    const idx = createElement({ tag: 'td', classes: 'playerStatIndex'});
-    const name = createElement({ tag: 'td', classes: 'playerStatName'});
-    const team = createElement({ tag: 'td', classes: 'playerStatTeam'});
-    const count = createElement({ tag: 'td', classes: 'playerStatCount'});
-    idx.innerText = `${index+1}.`;
-    const playerName = getPlayerName(goal.name)
-    if (playerName) name.innerText = `${playerName.toUpperCase()}`;
-    const playerTeam = getPlayerEditionTeam(id, goal.name)
-    if (playerTeam) team.innerText = `( ${playerTeam.toUpperCase()} )`;
-    count.innerText = `${goal.count}`;
-    playerGoalContainer.appendChild(idx);
-    playerGoalContainer.appendChild(name);
-    playerGoalContainer.appendChild(team);
-    playerGoalContainer.appendChild(count);
-    goalsTable.appendChild(playerGoalContainer);
+      const playerGoalContainer = createElement({ tag: 'tr', classes: 'playerStatContainer'});
+      const idx = createElement({ tag: 'td', classes: 'playerStatIndex'});
+      const name = createElement({ tag: 'td', classes: 'playerStatName'});
+      const team = createElement({ tag: 'td', classes: 'playerStatTeam'});
+      const count = createElement({ tag: 'td', classes: 'playerStatCount'});
+      const playerName = getPlayerName(goal.name)
+      const playerTeam = getTeamAbbr(getPlayerEditionTeam(id,goal.name))
+      idx.innerText = `${index+1}.`;
+      if (playerName) name.innerText = `${playerName.toUpperCase()}`;
+      if (playerTeam) team.innerText = `( ${playerTeam.toUpperCase()} )`;
+      count.innerText = `${goal.count}`;
+      playerGoalContainer.appendChild(idx);
+      playerGoalContainer.appendChild(name);
+      playerGoalContainer.appendChild(team);
+      playerGoalContainer.appendChild(count);
+      goalsTable.appendChild(playerGoalContainer);
     }
   })
   assists.forEach((assist, index) => {
     if (assist.name !== '') {
       if (index <= 10) {
-    const playerAssistContainer = createElement({ tag: 'tr', classes: 'playerStatContainer'});
-    const idx = createElement({ tag: 'td', classes: 'playerStatIndex'});
-    const name = createElement({ tag: 'td', classes: 'playerStatName'});
-    const team = createElement({ tag: 'td', classes: 'playerStatTeam'});
-    const count = createElement({ tag: 'td', classes: 'playerStatCount'});
-    idx.innerText = `${index}.`;
-    name.innerText = `${getPlayerName(assist.name).toUpperCase()}`;
-    team.innerText = `( ${getPlayerEditionTeam(id,assist.name).toUpperCase()} )`;
-    count.innerText = `${assist.count}`;
-    playerAssistContainer.appendChild(idx);
-    playerAssistContainer.appendChild(name);
-    playerAssistContainer.appendChild(team);
-    playerAssistContainer.appendChild(count);
-    assistsTable.appendChild(playerAssistContainer);
+        const playerAssistContainer = createElement({ tag: 'tr', classes: 'playerStatContainer'});
+        const idx = createElement({ tag: 'td', classes: 'playerStatIndex'});
+        const name = createElement({ tag: 'td', classes: 'playerStatName'});
+        const team = createElement({ tag: 'td', classes: 'playerStatTeam'});
+        const count = createElement({ tag: 'td', classes: 'playerStatCount'});
+        const playerName = getPlayerName(assist.name)
+        const playerTeam = getTeamAbbr(getPlayerEditionTeam(id,assist.name))
+        idx.innerText = `${index+1}.`;
+        if (playerName) name.innerText = `${playerName.toUpperCase()}`;
+        if (playerTeam) team.innerText = `( ${playerTeam.toUpperCase()} )`;
+        count.innerText = `${assist.count}`;
+        playerAssistContainer.appendChild(idx);
+        playerAssistContainer.appendChild(name);
+        playerAssistContainer.appendChild(team);
+        playerAssistContainer.appendChild(count);
+        assistsTable.appendChild(playerAssistContainer);
       }
     }
   })
+  }
   goalContainer.appendChild(goalsTable);
   assistContainer.appendChild(assistsTable);
   container.appendChild(goalContainer);

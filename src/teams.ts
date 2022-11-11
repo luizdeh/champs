@@ -12,6 +12,7 @@ import {
 import { generateTeamsList, toggleNewEditionButton } from './editions';
 import { colors, teamsPalette, logos } from './appConfig';
 
+dbTeams()
 
 const teams = document.getElementById('teams');
 
@@ -20,6 +21,7 @@ const teamForm = createElement({tag:'form',id:'teamForm',classes:'teamForm'}) as
 const teamInput = createElement({tag:'input',id:'teamInput',classes:'teamInput'}) as HTMLInputElement
 const abbrInput = createElement({tag:'input',id:'abbrInput',classes:'teamInput'}) as HTMLInputElement
 const teamSubmit = createElement({tag:'button',id:'teamSubmit',classes:'teamSubmit'}) as HTMLButtonElement
+
 const teamsList = createElement({tag:'div',id:'teamsList',classes:'teamsList'})
 
 teamForm.setAttribute('method', 'post');
@@ -190,6 +192,7 @@ export function getTeamName(id: string) {
         .filter((team: Team) => team.id === id)
         .map((name: Team) => name.name)[0];
 }
+
 export function getTeamAbbr(id: string) {
   return dbTeams().filter((team: Team) => team.id === id).map((name: Team) => name.abbr)[0];
 }

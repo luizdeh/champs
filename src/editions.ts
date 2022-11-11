@@ -11,12 +11,11 @@ import {
   Edition,
   TeamPairings,
   createElement,
-  dbPlayers,
+  isComplete,
+  emptyMessage,
 } from './app';
 import { listTeams, getTeamName, getRoster } from './teams';
-import { renderEditionResults, renderPlayerStats } from './results'
-
-const c = console.log.bind(console);
+import { renderEditionResults, renderPlayerStats, editionTable } from './results'
 
 // TODO make sure nothing else happens when an edition is created and is active ( create active and inactive state of editions )
 // TODO create a 'pause edition' function that will disable the edition and make it inactive
@@ -171,7 +170,7 @@ function createEdition() {
 
   if (editionName.length >= 3) {
     // clear modal
-    closeModalCreateEdition();
+  closeModalCreateEdition();
     // disable the new edition button
     toggleNewEditionButton();
     // clear control buttons
@@ -190,7 +189,7 @@ function createEdition() {
       editionTeams.push({ teamId: editionList[i], roster });
     }
     // push created edition to DB
-    currentEdition.push({ id: editionId, date, editionName, editionTeams });
+    currentEdition.push({ id: editionId, date, editionName, editionTeams, complete: false });
     saveEdition(currentEdition);
     // populate the games database
     populateGamesDB(editionId);
@@ -233,13 +232,6 @@ function findEditionName(id: string) {
       return editions[i].editionName.toUpperCase();
     }
   }
-}
-
-// function to find player's name using his ID
-function findPlayerName(id: string) {
-  const player = dbPlayers().find((player: Player) => player.id === id);
-  return player.name;
-  // return dbPlayers().find((player: Player) => player.id === id)[0].name
 }
 
 // function to find roster
@@ -540,11 +532,16 @@ function renderEditionTitle(id: string) {
   title.appendChild(champsName);
   title.appendChild(champsDate);
 
+  // title.classList.add('sticky')
+
   return title;
 }
 
 // render the games from any given edition using the edition's ID
 function renderEdition(id: string) {
+
+  // showHideEditionList()
+
   const editionShown = document.getElementById('editionShown') as HTMLElement;
 
   editionShown.innerHTML = '';
@@ -566,6 +563,19 @@ function renderEdition(id: string) {
 
     return container;
   });
+
+  if (isComplete(id)) {
+    const db = dbEditions()
+    const index = db.findIndex((item:Edition) => item.id === id)
+    if (db[index].complete === false) {
+      db[index].complete = true
+      saveEdition(db)
+      location.reload()
+    } else {
+      return
+    }
+  }
+
 }
 
 // save game result to the database
@@ -576,6 +586,8 @@ function addGame(gameId: string) {
   const scoreButton = container?.getElementsByClassName('scoreButton')[0] as HTMLButtonElement;
   const homeList = container?.getElementsByClassName('homeList')[0] as HTMLOListElement;
   const awayList = container?.getElementsByClassName('awayList')[0] as HTMLOListElement;
+
+  // const rosters = container?.getElementsByClassName('gameContainerRosters')[0] as HTMLElement
 
   const homeGoalScorer = Array.from(homeList?.querySelectorAll(`.playerStatsSelect[data-player-goal-select]`) as NodeListOf<HTMLSelectElement>);
   const homeGoalAssister = Array.from(homeList?.querySelectorAll(`.playerStatSelect[data-player-assist-select]`) as NodeListOf<HTMLSelectElement>);
@@ -646,6 +658,13 @@ function addGame(gameId: string) {
 
       // re-render the edition to let CSS do its thing
       renderEdition(findEditionId(gameId));
+
+      // update the info for the dashboard
+      getOverallStats()
+
+      // hide rosters div
+      // toggleTeamRoster(event, gameId)
+
     } else {
       alert('Must select all goal scorers');
     }
@@ -704,25 +723,34 @@ function renderEditionList() {
       editionButton.onclick = () => renderEditionHideList(editions[i].id);
       listOfEditions?.appendChild(editionButton);
     }
+  } else {
+    emptyMessage(listOfEditions, 'No champs have been played!')
   }
 }
 
 // function to hide the list of editions after an edition is clicked
 function renderEditionHideList(id: string) {
-  renderEdition(id);
-  showHideEditionList();
+  const edition = document.getElementById('editionShown')
+  if (edition.childNodes.length === 0) { 
+    return renderEdition(id);
+  } else {
+    return edition.innerHTML = ''
+  }
 }
 
 //function to toggle the list of editions
 const showHideEditionList = () => {
   const list = document.getElementById('listOfEditions') as HTMLElement;
+  const toggleListOfEditions = document.getElementById('toggleListOfEditions') as HTMLElement
   list.innerHTML = '';
   if (list) {
     if (list.classList.contains('hidden')) {
       list.classList.remove('hidden');
       renderEditionList();
+      toggleListOfEditions.innerHTML = 'HIDE List of Editions'
     } else {
       list.classList.add('hidden');
+      toggleListOfEditions.innerHTML = 'SHOW List of Editions'
     }
   }
 };
@@ -844,16 +872,17 @@ teams?.appendChild(modalEditionName);
 // submit the form preventing default
 if (formEditionName) formEditionName.onsubmit = formSubmit;
 
-// create the clickable 'banner' that renders the list of editions
-function loadIcon() {
-  const logo = createElement({tag:'div',classes:'icon'}) as HTMLImageElement
-  let img = new Image()
-  img.src = 'https://imgur.com/7RBx4uq.png' ;
-  logo.appendChild(img);
-  return logo;
-}
-const editionsToggle = createElement({tag:'div',classes:'editionsToggle'}) as HTMLDivElement;
-editionsToggle.appendChild(loadIcon()).addEventListener('click', () => showHideEditionList());
+// champsIcon.addEventListener('click', () => showHideEditionList())
+
+const toggleListOfEditions = createElement({tag:'p',classes:'toggleListOfEditions'}) as HTMLElement
+toggleListOfEditions.innerHTML = 'SHOW List of Editions'
+toggleListOfEditions.id = 'toggleListOfEditions'
+toggleListOfEditions.addEventListener('click', () => showHideEditionList())
+
+// append the icon to the page
+const editionsToggle = createElement({tag:'div',classes:'editionsToggle'}) as HTMLDivElement
+editionsToggle.appendChild(toggleListOfEditions)
+// editionsToggle.appendChild(champsIcon);
 champs?.appendChild(editionsToggle);
 
 // create the div that contains the list of editions
@@ -869,3 +898,76 @@ const editionShown = document.createElement('div');
 editionShown.classList.add('editionShown');
 editionShown.id = 'editionShown';
 champs?.appendChild(editionShown);
+
+
+export let editionsArray: any[] = []
+
+dbEditions().forEach((item:Edition) => {
+  const complete = isComplete(item.id)
+  if (complete) {
+    const results = editionTable(item.id)
+    const editionName = item.editionName.toUpperCase()
+    return editionsArray.push({id: item.id, date: item.date, name: editionName, results})
+  }
+})
+if (editionsArray.length >= 2) editionsArray.sort((a,b) => b.date.localeCompare(a.date))
+
+const getEditionResults = () => editionsArray.map(item => item.results)
+getEditionResults()
+// console.log(editionsArray)
+
+export let overallStats: any[] = []
+
+export function getOverallStats() {
+
+  let arr: any[] = []
+  for (const edition of editionsArray) arr.push(...edition.results)
+
+  let res: any[] = []
+  res = arr.map((item) => { 
+    return { 
+      teamId: item.teamId,
+      points: item.Points,
+      games: item.Games,
+      wins: item.Wins,
+      draws: item.Draws,
+      defeats: item.Defeats,
+      goalsScored: item.GoalsScored,
+      goalsAgainst: item.GoalsAgainst,
+      netGoals: item.NetGoals,
+      pointsPercentage: 0,
+      rankingPoints: item.RankingPoints,
+      champion: item.Champion,
+      participation: item.Participation
+    }
+  })
+
+  const result = res.reduce((acc, current) => {
+    const index = acc.findIndex((item:any) => item.teamId === current.teamId)
+    index > -1 
+      ? ( 
+         acc[index].points += current.points, 
+           acc[index].games += current.games,
+           acc[index].wins += current.wins,
+           acc[index].draws += current.draws, 
+           acc[index].defeats += current.defeats,
+           acc[index].goalsScored += current.goalsScored,
+           acc[index].goalsAgainst += current.goalsAgainst, 
+           acc[index].netGoals += current.netGoals,
+           acc[index].rankingPoints += current.rankingPoints,
+           acc[index].champion += current.champion,
+           acc[index].participation += current.participation
+        )
+          : acc.push({...current})
+          return acc
+  },[])
+
+  result.forEach((item:any) => item.pointsPercentage = Number((item.points / (item.games * 3)).toFixed(4)))
+
+  result.sort((a:any,b:any) => b.rankingPoints - a.rankingPoints || b.pointsPercentage - a.pointsPercentage)
+
+  overallStats = result
+
+  console.log(result)
+  return overallStats
+}
