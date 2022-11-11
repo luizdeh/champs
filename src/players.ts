@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
 import {
   dbTeams,
   Team,
@@ -10,6 +9,7 @@ import {
 } from './app';
 import { listTeams, getTeamAbbr, loadLogo } from './teams';
 import { position, positionIndex, colors, teamsPalette } from './appConfig';
+import { v4 as uuidv4 } from 'uuid';
 
 const players = document.getElementById('players');
 
@@ -459,12 +459,6 @@ function populatePlayersList() {
     if (playersList) playersList.appendChild(playerContainerControl);
   });
 }
-
-// DUDU LIST
-// 1. One input field where the user can search for a player, OR add a new player
-// 2. Dropdowns to help user search for players:
-//      - by position
-//      - by team
 
 function listPlayers() {
   if (playersList) playersList.innerHTML = '';

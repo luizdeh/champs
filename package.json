@@ -1,5 +1,5 @@
 {
-  "name": "lowdb-test",
+  "name": "champs",
   "version": "1.0.0",
   "description": "",
   "source": "src/index.html",
@@ -10,14 +10,20 @@
     "build": "parcel build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "resolveJsonModule": true
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@parcel/bundler-experimental": "^2.7.0",
     "@types/uuid": "^8.3.4",
     "parcel": "^2.6.2"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.2.0",
     "uuid": "^8.3.2"
   }
 }
