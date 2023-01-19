@@ -15,9 +15,9 @@ With it, you can:
 
 - Probably not, this is a specific use case for me and my friends, mainly to move away from Excel spreadsheets.
 
-## Other thoughts
+## Author notes
 
-- This is my first working application and one I enjoyed learning JavaScript/TypeScript.
+- This is my first working application and one that made me thoroughly enjoy learning JavaScript/TypeScript.
 
 ## Collaborators
 
