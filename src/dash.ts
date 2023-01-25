@@ -260,6 +260,36 @@ return assisters().length
   : emptyMessage(assists,'If nobody scored, then no one passed the ball.')
 }
 
+// import and export localStorage
+const impexp = createElement({tag:'div',classes:'impexp'}) as HTMLElement
+
+const expButton = createElement({tag:'button', classes:'expButton'}) as HTMLButtonElement
+expButton.textContent = 'EXPORT'
+
+const impButton = createElement({tag:'button', classes:'expButton'}) as HTMLButtonElement
+impButton.textContent = 'IMPORT'
+
+expButton.onclick = () => { 
+  navigator.clipboard.writeText(JSON.stringify(localStorage))
+  alert('localStorage copied to clipboard!')
+}
+
+impButton.onclick = () => {
+  const goAhead = window.confirm('')
+  if (goAhead) {
+    const input = prompt('')
+    if (input !== null) {
+
+    }
+  }
+}
+
+impexp.appendChild(expButton)
+impexp.appendChild(impButton)
+
+if (dash) dash.appendChild(impexp)
+
+// initialize everything
 scorers()
 assisters()
 populateChampionList()

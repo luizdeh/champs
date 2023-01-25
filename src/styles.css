@@ -1354,3 +1354,28 @@ select {
   text-align:center;
   color:grey;
 }
+
+.impexp {
+  position:relative;
+  display: flex;
+  flex-direction: column;
+  width:6rem;
+  height:4rem;
+  bottom:0;
+  gap: 1rem;
+}
+
+.expButton {
+  flex:1;
+  outline:none;
+  border:none;
+  padding: .5rem;
+  background-color:lightgrey;
+  font-size:.65rem;
+}
+
+.expButton:hover {
+  background-color:grey;
+  color:white;
+  cursor:pointer;
+}

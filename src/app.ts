@@ -114,6 +114,7 @@ export function cleanDB(id:string) {
 
 }
 
+// export localStorage to a JSON file
 // const players = JSON.stringify(localStorage.players);
 // const teams = JSON.stringify(localStorage.teams);
 // const editions = JSON.stringify(localStorage.editions);
@@ -122,6 +123,9 @@ export function cleanDB(id:string) {
 // const storages = [teams, players, editions, games];
 
 // storages.forEach((item) => console.log(item))
+
+// import JSON file to localStorage
+
 
 export function formSubmit(event: SubmitEvent) {
   event.preventDefault();
