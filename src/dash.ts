@@ -275,11 +275,13 @@ expButton.onclick = () => {
 }
 
 impButton.onclick = () => {
-  const goAhead = window.confirm('')
+  const goAhead = window.confirm('This will erase localStorage and input new information. Are you sure about that?')
   if (goAhead) {
-    const input = prompt('')
+    const input = prompt('Please paste the contents of your JSON file. The page will refresh after you click OK.')
     if (input !== null) {
-
+      const data = JSON.parse(input)
+      Object.keys(data).forEach((item) => localStorage.setItem(item, data[item]))
+      setTimeout("location.reload(true);",1000);
     }
   }
 }

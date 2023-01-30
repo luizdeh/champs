@@ -968,6 +968,5 @@ export function getOverallStats() {
 
   overallStats = result
 
-  console.log(result)
   return overallStats
 }
